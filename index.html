@@ -1081,12 +1081,66 @@
   }
 
   function startLongPress(e, stickerId) {
-    if(pendingStickerId) return;
-    pendingStickerId = stickerId;
-    longPressTimer = setTimeout(() => { if(pendingStickerId === stickerId) showUndoModal(stickerId); pendingStickerId = null; longPressTimer = null; }, 1000);
+  // Prevenir comportamiento por defecto en touchstart
+  if (e.type === 'touchstart') {
+    e.preventDefault();
   }
+  
+  // Cancelar cualquier long press pendiente
+  if (longPressTimer) {
+    clearTimeout(longPressTimer);
+    longPressTimer = null;
+  }
+  
+  pendingStickerId = stickerId;
+  
+  longPressTimer = setTimeout(() => {
+    if (pendingStickerId === stickerId) {
+      // Vibrar si el dispositivo lo soporta (feedback táctil)
+      if (navigator.vibrate) {
+        navigator.vibrate(15);
+      }
+      showUndoModal(stickerId);
+      pendingStickerId = null;
+      longPressTimer = null;
+    }
+  }, 800);
+}
 
-  function cancelLongPress() { if(longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; } pendingStickerId = null; }
+function cancelLongPress(e) {
+  // Solo cancelar el long press si el usuario MOVIÓ el dedo (touchmove)
+  // NO cancelar en touchend, para permitir que el temporizador se complete
+  if (e && e.type === 'touchmove') {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+    pendingStickerId = null;
+    return;
+  }
+  
+  // Para mouse (escritorio), sí cancelamos al soltar o salir
+  if (e && (e.type === 'mouseup' || e.type === 'mouseleave')) {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+    pendingStickerId = null;
+    return;
+  }
+  
+  // Para touchcancel (llamada entrante, etc.), sí cancelamos
+  if (e && e.type === 'touchcancel') {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+    pendingStickerId = null;
+    return;
+  }
+  
+  // touchend NO cancela el long press (se permite que el temporizador se complete)
+  }
 
   function showUndoModal(stickerId) {
     const count = ownedState[stickerId] || 0;
