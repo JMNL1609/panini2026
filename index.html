@@ -381,7 +381,7 @@
       gap: var(--space-sm);
       padding: var(--space-sm) var(--space-md);
       background: linear-gradient(95deg, rgba(245,197,66,0.08), transparent);
-      cursor: pointer;
+      cursor: default;
       border-bottom: 1px solid rgba(255,255,255,0.04);
       min-height: var(--touch-min);
     }
@@ -416,6 +416,7 @@
       font-size: 0.65rem;
       font-weight: 700;
       flex-shrink: 0;
+      pointer-events: none;
     }
 
     .team-progress-bar {
@@ -1052,7 +1053,8 @@
       const card = document.createElement('div'); card.className = 'team-card'; card.id = `card-${sec.code}`;
       card.dataset.code = sec.code.toLowerCase(); card.dataset.name = sec.name.toLowerCase();
       const header = document.createElement('div'); header.className = 'team-header';
-      header.onclick = () => toggleTeam(sec.code, sec.n);
+      // 👇 CORRECCIÓN 2: Se eliminó el onclick del header para desactivar el marcado completo
+      // header.onclick = () => toggleTeam(sec.code, sec.n);  ← ANTES (esto causaba el problema)
       header.innerHTML = `<span class="team-flag">${sec.flag}</span><span class="team-code">${sec.code}</span><span class="team-name">${sec.name}</span><div class="team-stats"><span id="pn-${sec.code}" style="font-weight:600;">0/${sec.n}</span><div class="team-progress-bar"><div class="team-progress-fill" id="pb-${sec.code}" style="width:0%"></div></div><span class="complete-tag">✓ COMPLETO</span></div>`;
       card.appendChild(header);
       const gridDiv = document.createElement('div'); gridDiv.className = 'sticker-grid';
@@ -1067,6 +1069,8 @@
         el.addEventListener('mouseup', cancelLongPress); el.addEventListener('mouseleave', cancelLongPress);
         el.addEventListener('touchend', cancelLongPress); el.addEventListener('touchcancel', cancelLongPress);
         el.addEventListener('touchmove', cancelLongPress);
+        // 👇 CORRECCIÓN 1: Previene el menú contextual nativo del teléfono al mantener presionado
+        el.addEventListener('contextmenu', (e) => e.preventDefault());
         gridDiv.appendChild(el);
       }
       const stb = document.createElement('button'); stb.className = 'scroll-top-btn'; stb.textContent = '⬆️ Subir';
@@ -1116,15 +1120,6 @@
     if(el) { updateStickerAppearance(el, stickerId); el.classList.add('sticker-pop'); setTimeout(() => el.classList.remove('sticker-pop'), 200);
       const card = el.closest('.team-card'); if(card) { const sec = SECTIONS.find(s => s.code === card.id.replace('card-',''));
         if(sec) { let c = 0; for(let i=1; i<=sec.n; i++) if(ownedState[`${sec.code}${i}`] >= 1) c++; applyCurrentView(card, sec, c); } } }
-  }
-
-  function toggleTeam(code, total) {
-    let any = false; for(let i=1; i<=total; i++) if(!ownedState[`${code}${i}`] || ownedState[`${code}${i}`] === 0) { any = true; break; }
-    const set = any ? 1 : 0;
-    for(let i=1; i<=total; i++) { const id = `${code}${i}`; if(set === 1) ownedState[id] = 1; else delete ownedState[id]; }
-    persist();
-    for(let i=1; i<=total; i++) { const el = document.querySelector(`.sticker[data-sticker-id="${code}${i}"]`); if(el) { updateStickerAppearance(el, `${code}${i}`); el.classList.add('sticker-pop'); setTimeout(() => el.classList.remove('sticker-pop'), 150); } }
-    updateGlobalStats(); showToast(`${code}: ${set ? 'completado ✔️' : 'colección reiniciada'}`, 1400);
   }
 
   function filterTeams() {
