@@ -475,6 +475,9 @@
       backdrop-filter: blur(2px);
       box-shadow: 0 1px 2px rgba(0,0,0,0.2);
       position: relative;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
     }
 
     .sticker:active {
@@ -768,7 +771,7 @@
 <div class="teams-grid" id="teamsContainer"></div>
 <div class="world-cup-footer">
   ⚽ 48 EQUIPOS · 988 CROMOS OFICIALES ⚽<br>
-  Toca cada sticker para coleccionar · Completa todas las selecciones
+  Toca cada sticker para coleccionar · Doble toque para deshacer
 </div>
 <div id="toastMsg" class="toast-notify"></div>
 
@@ -842,8 +845,10 @@
   const TOTAL_STICKERS = SECTIONS.reduce((acc, s) => acc + s.n, 0);
   let ownedState = {};
   let currentView = 'album';
-  let longPressTimer = null;
-  let pendingStickerId = null;
+
+  // === NUEVO: Variables para el doble toque ===
+  let lastTapTime = 0;
+  const DOUBLE_TAP_DELAY = 400;
 
   try {
     const saved = localStorage.getItem('panini2026_app');
@@ -1047,14 +1052,36 @@
     else if(count >= 2) { el.classList.add('duplicate'); const b = document.createElement('div'); b.className = 'duplicate-badge'; b.textContent = count-1; el.appendChild(b); }
   }
 
+  // === NUEVO: Función que maneja el doble toque ===
+  function handleStickerTouch(sid, e) {
+    e.stopPropagation();
+    
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - lastTapTime;
+    
+    if (tapLength < DOUBLE_TAP_DELAY && tapLength > 0) {
+      // Doble toque detectado → mostrar modal de deshacer
+      e.preventDefault();
+      const count = ownedState[sid] || 0;
+      if (count >= 1) {
+        showUndoModal(sid);
+      } else {
+        showToast(`${sid} no está marcado`, 1200);
+      }
+      lastTapTime = 0;
+    } else {
+      // Primer toque → marcar/repetir sticker
+      lastTapTime = currentTime;
+      handleStickerClick(sid);
+    }
+  }
+
   function renderAll() {
     const container = document.getElementById('teamsContainer'); container.innerHTML = '';
     SECTIONS.forEach(sec => {
       const card = document.createElement('div'); card.className = 'team-card'; card.id = `card-${sec.code}`;
       card.dataset.code = sec.code.toLowerCase(); card.dataset.name = sec.name.toLowerCase();
       const header = document.createElement('div'); header.className = 'team-header';
-      // 👇 CORRECCIÓN 2: Se eliminó el onclick del header para desactivar el marcado completo
-      // header.onclick = () => toggleTeam(sec.code, sec.n);  ← ANTES (esto causaba el problema)
       header.innerHTML = `<span class="team-flag">${sec.flag}</span><span class="team-code">${sec.code}</span><span class="team-name">${sec.name}</span><div class="team-stats"><span id="pn-${sec.code}" style="font-weight:600;">0/${sec.n}</span><div class="team-progress-bar"><div class="team-progress-fill" id="pb-${sec.code}" style="width:0%"></div></div><span class="complete-tag">✓ COMPLETO</span></div>`;
       card.appendChild(header);
       const gridDiv = document.createElement('div'); gridDiv.className = 'sticker-grid';
@@ -1063,14 +1090,11 @@
         const el = document.createElement('div'); el.className = 'sticker'; el.textContent = sid; el.setAttribute('data-sticker-id', sid);
         if(count === 1) el.classList.add('owned');
         else if(count >= 2) { el.classList.add('duplicate'); const b = document.createElement('div'); b.className = 'duplicate-badge'; b.textContent = count-1; el.appendChild(b); }
-        el.onclick = (e) => { e.stopPropagation(); handleStickerClick(sid); };
-        el.addEventListener('mousedown', (e) => startLongPress(e, sid));
-        el.addEventListener('touchstart', (e) => startLongPress(e, sid), {passive: false});
-        el.addEventListener('mouseup', cancelLongPress); el.addEventListener('mouseleave', cancelLongPress);
-        el.addEventListener('touchend', cancelLongPress); el.addEventListener('touchcancel', cancelLongPress);
-        el.addEventListener('touchmove', cancelLongPress);
-        // 👇 CORRECCIÓN 1: Previene el menú contextual nativo del teléfono al mantener presionado
+        
+        // === NUEVO: Solo dos event listeners, simple y limpio ===
+        el.onclick = (e) => { handleStickerTouch(sid, e); };
         el.addEventListener('contextmenu', (e) => e.preventDefault());
+        
         gridDiv.appendChild(el);
       }
       const stb = document.createElement('button'); stb.className = 'scroll-top-btn'; stb.textContent = '⬆️ Subir';
@@ -1080,71 +1104,6 @@
     renderFlagsNav(); updateGlobalStats();
   }
 
-  function startLongPress(e, stickerId) {
-  // Cancelar cualquier long press pendiente
-  if (longPressTimer) {
-    clearTimeout(longPressTimer);
-    longPressTimer = null;
-  }
-  
-  pendingStickerId = stickerId;
-  
-  // Prevenir solo en touchstart para evitar menú contextual en Android
-  if (e.type === 'touchstart') {
-    e.preventDefault();
-  }
-  
-  longPressTimer = setTimeout(() => {
-    if (pendingStickerId === stickerId) {
-      // Vibrar si el dispositivo lo soporta (feedback táctil)
-      if (navigator.vibrate) {
-        navigator.vibrate(15);
-      }
-      showUndoModal(stickerId);
-      pendingStickerId = null;
-      longPressTimer = null;
-    }
-  }, 1000);
-}
-
-function cancelLongPress(e) {
-  // En Android, NO cancelar en touchend - el temporizador debe completarse
-  if (e && e.type === 'touchend') {
-    // No hacer nada, dejar que el temporizador se complete
-    return;
-  }
-  
-  // Cancelar en touchmove (el usuario movió el dedo)
-  if (e && e.type === 'touchmove') {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      longPressTimer = null;
-    }
-    pendingStickerId = null;
-    return;
-  }
-  
-  // Para mouse (escritorio), sí cancelamos al soltar o salir
-  if (e && (e.type === 'mouseup' || e.type === 'mouseleave')) {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      longPressTimer = null;
-    }
-    pendingStickerId = null;
-    return;
-  }
-  
-  // Para touchcancel (llamada entrante, etc.), sí cancelamos
-  if (e && e.type === 'touchcancel') {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      longPressTimer = null;
-    }
-    pendingStickerId = null;
-    return;
-  }
-}
-  
   function showUndoModal(stickerId) {
     const count = ownedState[stickerId] || 0;
     if(count === 0) { showToast(`${stickerId} no está marcado`, 1200); return; }
