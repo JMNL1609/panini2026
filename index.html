@@ -1054,27 +1054,27 @@
 
   // === NUEVO: Función que maneja el doble toque ===
   function handleStickerTouch(sid, e) {
-    e.stopPropagation();
-    
-    const currentTime = new Date().getTime();
-    const tapLength = currentTime - lastTapTime;
-    
-    if (tapLength < DOUBLE_TAP_DELAY && tapLength > 0) {
-      // Doble toque detectado → mostrar modal de deshacer
-      e.preventDefault();
-      const count = ownedState[sid] || 0;
-      if (count >= 1) {
-        showUndoModal(sid);
-      } else {
-        showToast(`${sid} no está marcado`, 1200);
-      }
-      lastTapTime = 0;
+  e.stopPropagation();
+  e.preventDefault();
+  
+  const currentTime = new Date().getTime();
+  const tapLength = currentTime - lastTapTime;
+  
+  if (tapLength < DOUBLE_TAP_DELAY && tapLength > 0) {
+    // Doble toque detectado → mostrar modal de deshacer
+    const count = ownedState[sid] || 0;
+    if (count >= 1) {
+      showUndoModal(sid);
     } else {
-      // Primer toque → marcar/repetir sticker
-      lastTapTime = currentTime;
-      handleStickerClick(sid);
+      showToast(`${sid} no está marcado`, 1200);
     }
+    lastTapTime = 0; // Resetear para evitar conflictos
+  } else {
+    // Primer toque → marcar/repetir sticker
+    lastTapTime = currentTime;
+    handleStickerClick(sid);
   }
+}
 
   function renderAll() {
     const container = document.getElementById('teamsContainer'); container.innerHTML = '';
@@ -1105,15 +1105,37 @@
   }
 
   function showUndoModal(stickerId) {
-    const count = ownedState[stickerId] || 0;
-    if(count === 0) { showToast(`${stickerId} no está marcado`, 1200); return; }
-    const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
-    const dialog = document.createElement('div'); dialog.className = 'modal-dialog';
-    dialog.innerHTML = `<p>¿Deseas deshacer ${stickerId}? (Estado: ${count > 1 ? 'Repetida x'+(count-1) : 'Marcada'})</p><div class="modal-buttons"><button class="btn-undo">↩️ Deshacer</button><button class="btn-close">✖️ Cerrar</button></div>`;
-    dialog.querySelector('.btn-undo').onclick = () => { undoSticker(stickerId); document.body.removeChild(overlay); };
-    dialog.querySelector('.btn-close').onclick = () => document.body.removeChild(overlay);
-    overlay.onclick = (e) => { if(e.target === overlay) document.body.removeChild(overlay); };
-    overlay.appendChild(dialog); document.body.appendChild(overlay);
+  const count = ownedState[stickerId] || 0;
+  if(count === 0) { showToast(`${stickerId} no está marcado`, 1200); return; }
+  
+  // Resetear lastTapTime para que no interfiera
+  lastTapTime = 0;
+  
+  const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
+  const dialog = document.createElement('div'); dialog.className = 'modal-dialog';
+  dialog.innerHTML = `<p>¿Deseas deshacer ${stickerId}? (Estado: ${count > 1 ? 'Repetida x'+(count-1) : 'Marcada'})</p><div class="modal-buttons"><button class="btn-undo">↩️ Deshacer</button><button class="btn-close">✖️ Cerrar</button></div>`;
+  
+  dialog.querySelector('.btn-undo').onclick = (e) => { 
+    e.stopPropagation(); 
+    e.preventDefault();
+    undoSticker(stickerId); 
+    document.body.removeChild(overlay); 
+  };
+  
+  dialog.querySelector('.btn-close').onclick = (e) => { 
+    e.stopPropagation(); 
+    e.preventDefault();
+    document.body.removeChild(overlay); 
+  };
+  
+  overlay.onclick = (e) => { 
+    if(e.target === overlay) {
+      document.body.removeChild(overlay); 
+    }
+  };
+  
+  overlay.appendChild(dialog); 
+  document.body.appendChild(overlay);
   }
 
   function undoSticker(stickerId) {
