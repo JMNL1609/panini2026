@@ -1065,7 +1065,7 @@
         else if(count >= 2) { el.classList.add('duplicate'); const b = document.createElement('div'); b.className = 'duplicate-badge'; b.textContent = count-1; el.appendChild(b); }
         el.onclick = (e) => { e.stopPropagation(); handleStickerClick(sid); };
         el.addEventListener('mousedown', (e) => startLongPress(e, sid));
-        el.addEventListener('touchstart', (e) => startLongPress(e, sid), {passive: true});
+        el.addEventListener('touchstart', (e) => startLongPress(e, sid), {passive: false});
         el.addEventListener('mouseup', cancelLongPress); el.addEventListener('mouseleave', cancelLongPress);
         el.addEventListener('touchend', cancelLongPress); el.addEventListener('touchcancel', cancelLongPress);
         el.addEventListener('touchmove', cancelLongPress);
@@ -1089,6 +1089,11 @@
   
   pendingStickerId = stickerId;
   
+  // Prevenir solo en touchstart para evitar menú contextual en Android
+  if (e.type === 'touchstart') {
+    e.preventDefault();
+  }
+  
   longPressTimer = setTimeout(() => {
     if (pendingStickerId === stickerId) {
       // Vibrar si el dispositivo lo soporta (feedback táctil)
@@ -1099,11 +1104,17 @@
       pendingStickerId = null;
       longPressTimer = null;
     }
-  }, 800);
+  }, 1000);
 }
 
 function cancelLongPress(e) {
-  // Solo cancelar el long press si el usuario MOVIÓ el dedo (touchmove)
+  // En Android, NO cancelar en touchend - el temporizador debe completarse
+  if (e && e.type === 'touchend') {
+    // No hacer nada, dejar que el temporizador se complete
+    return;
+  }
+  
+  // Cancelar en touchmove (el usuario movió el dedo)
   if (e && e.type === 'touchmove') {
     if (longPressTimer) {
       clearTimeout(longPressTimer);
@@ -1132,8 +1143,6 @@ function cancelLongPress(e) {
     pendingStickerId = null;
     return;
   }
-  
-  // touchend NO cancela el long press (se permite que el temporizador se complete)
 }
   function showUndoModal(stickerId) {
     const count = ownedState[stickerId] || 0;
