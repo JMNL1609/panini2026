@@ -1065,7 +1065,7 @@
         else if(count >= 2) { el.classList.add('duplicate'); const b = document.createElement('div'); b.className = 'duplicate-badge'; b.textContent = count-1; el.appendChild(b); }
         el.onclick = (e) => { e.stopPropagation(); handleStickerClick(sid); };
         el.addEventListener('mousedown', (e) => startLongPress(e, sid));
-        el.addEventListener('touchstart', (e) => startLongPress(e, sid), {passive: false});
+        el.addEventListener('touchstart', (e) => startLongPress(e, sid), {passive: true});
         el.addEventListener('mouseup', cancelLongPress); el.addEventListener('mouseleave', cancelLongPress);
         el.addEventListener('touchend', cancelLongPress); el.addEventListener('touchcancel', cancelLongPress);
         el.addEventListener('touchmove', cancelLongPress);
@@ -1081,11 +1081,6 @@
   }
 
   function startLongPress(e, stickerId) {
-  // Prevenir comportamiento por defecto en touchstart
-  if (e.type === 'touchstart') {
-    e.preventDefault();
-  }
-  
   // Cancelar cualquier long press pendiente
   if (longPressTimer) {
     clearTimeout(longPressTimer);
@@ -1109,7 +1104,6 @@
 
 function cancelLongPress(e) {
   // Solo cancelar el long press si el usuario MOVIÓ el dedo (touchmove)
-  // NO cancelar en touchend, para permitir que el temporizador se complete
   if (e && e.type === 'touchmove') {
     if (longPressTimer) {
       clearTimeout(longPressTimer);
@@ -1140,8 +1134,7 @@ function cancelLongPress(e) {
   }
   
   // touchend NO cancela el long press (se permite que el temporizador se complete)
-  }
-
+}
   function showUndoModal(stickerId) {
     const count = ownedState[stickerId] || 0;
     if(count === 0) { showToast(`${stickerId} no está marcado`, 1200); return; }
