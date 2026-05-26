@@ -1081,69 +1081,12 @@
   }
 
   function startLongPress(e, stickerId) {
-  // Cancelar cualquier long press pendiente
-  if (longPressTimer) {
-    clearTimeout(longPressTimer);
-    longPressTimer = null;
+    if(pendingStickerId) return;
+    pendingStickerId = stickerId;
+    longPressTimer = setTimeout(() => { if(pendingStickerId === stickerId) showUndoModal(stickerId); pendingStickerId = null; longPressTimer = null; }, 1000);
   }
-  
-  pendingStickerId = stickerId;
-  
-  // Prevenir solo en touchstart para evitar menú contextual en Android
-  if (e.type === 'touchstart') {
-    e.preventDefault();
-  }
-  
-  longPressTimer = setTimeout(() => {
-    if (pendingStickerId === stickerId) {
-      // Vibrar si el dispositivo lo soporta (feedback táctil)
-      if (navigator.vibrate) {
-        navigator.vibrate(15);
-      }
-      showUndoModal(stickerId);
-      pendingStickerId = null;
-      longPressTimer = null;
-    }
-  }, 1000);
-}
 
-function cancelLongPress(e) {
-  // En Android, NO cancelar en touchend - el temporizador debe completarse
-  if (e && e.type === 'touchend') {
-    // No hacer nada, dejar que el temporizador se complete
-    return;
-  }
-  
-  // Cancelar en touchmove (el usuario movió el dedo)
-  if (e && e.type === 'touchmove') {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      longPressTimer = null;
-    }
-    pendingStickerId = null;
-    return;
-  }
-  
-  // Para mouse (escritorio), sí cancelamos al soltar o salir
-  if (e && (e.type === 'mouseup' || e.type === 'mouseleave')) {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      longPressTimer = null;
-    }
-    pendingStickerId = null;
-    return;
-  }
-  
-  // Para touchcancel (llamada entrante, etc.), sí cancelamos
-  if (e && e.type === 'touchcancel') {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      longPressTimer = null;
-    }
-    pendingStickerId = null;
-    return;
-  }
-}
+  function cancelLongPress() { if(longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; } pendingStickerId = null; }
   function showUndoModal(stickerId) {
     const count = ownedState[stickerId] || 0;
     if(count === 0) { showToast(`${stickerId} no está marcado`, 1200); return; }
