@@ -1053,7 +1053,9 @@
   }
 
   // === NUEVO: Función que maneja el doble toque ===
-  function handleStickerTouch(sid, e) {
+  let tapTimer = null;
+
+function handleStickerTouch(sid, e) {
   e.stopPropagation();
   e.preventDefault();
   
@@ -1061,21 +1063,33 @@
   const tapLength = currentTime - lastTapTime;
   
   if (tapLength < DOUBLE_TAP_DELAY && tapLength > 0) {
-    // Doble toque detectado → mostrar modal de deshacer
+    // ¡DOBLE TOQUE! Cancelar el temporizador del primer toque
+    clearTimeout(tapTimer);
+    tapTimer = null;
+    lastTapTime = 0;
+    
+    // Mostrar modal de deshacer (sin sumar sticker)
     const count = ownedState[sid] || 0;
     if (count >= 1) {
       showUndoModal(sid);
     } else {
       showToast(`${sid} no está marcado`, 1200);
     }
-    lastTapTime = 0; // Resetear para evitar conflictos
   } else {
-    // Primer toque → marcar/repetir sticker
+    // POSIBLE PRIMER TOQUE: esperar a ver si viene otro
     lastTapTime = currentTime;
-    handleStickerClick(sid);
+    
+    // Cancelar cualquier temporizador pendiente
+    if (tapTimer) clearTimeout(tapTimer);
+    
+    // Retrasar la acción de marcar para esperar un posible segundo toque
+    tapTimer = setTimeout(() => {
+      handleStickerClick(sid);
+      tapTimer = null;
+      lastTapTime = 0;
+    }, DOUBLE_TAP_DELAY);
   }
 }
-
   function renderAll() {
     const container = document.getElementById('teamsContainer'); container.innerHTML = '';
     SECTIONS.forEach(sec => {
@@ -1108,8 +1122,9 @@
   const count = ownedState[stickerId] || 0;
   if(count === 0) { showToast(`${stickerId} no está marcado`, 1200); return; }
   
-  // Resetear lastTapTime para que no interfiera
+  // Resetear todo para evitar conflictos
   lastTapTime = 0;
+  if (tapTimer) { clearTimeout(tapTimer); tapTimer = null; }
   
   const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
   const dialog = document.createElement('div'); dialog.className = 'modal-dialog';
@@ -1136,7 +1151,7 @@
   
   overlay.appendChild(dialog); 
   document.body.appendChild(overlay);
-  }
+}
 
   function undoSticker(stickerId) {
     const count = ownedState[stickerId] || 0; if(count === 0) return;
