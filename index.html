@@ -416,7 +416,19 @@
       font-size: 0.65rem;
       font-weight: 700;
       flex-shrink: 0;
-      pointer-events: none;
+      cursor: pointer;
+      pointer-events: auto;
+      padding: 4px 8px;
+      border-radius: 12px;
+      transition: background 0.2s;
+    }
+
+    .team-stats:hover {
+      background: rgba(245,197,66,0.1);
+    }
+
+    .team-stats:active {
+      background: rgba(245,197,66,0.2);
     }
 
     .team-progress-bar {
@@ -777,7 +789,7 @@
 
 <script>
   const SECTIONS = [
-    { code:'FWC', name:'FIFA World Cup',      flag:'🏆', n:19 },
+    { code:'FWC', name:'FIFA World Cup',      flag:'🏆', n:20 },
     { code:'MEX', name:'México',              flag:'🇲🇽', n:20 },
     { code:'RSA', name:'Sudáfrica',           flag:'🇿🇦', n:20 },
     { code:'KOR', name:'Corea del Sur',       flag:'🇰🇷', n:20 },
@@ -846,9 +858,9 @@
   let ownedState = {};
   let currentView = 'album';
 
-  // === NUEVO: Variables para el doble toque ===
+  // Variables para el doble toque - RETRASO REDUCIDO A 300ms
   let lastTapTime = 0;
-  const DOUBLE_TAP_DELAY = 400;
+  const DOUBLE_TAP_DELAY = 300; // Reducido de 400ms a 300ms
 
   try {
     const saved = localStorage.getItem('panini2026_app');
@@ -889,6 +901,31 @@
       }
     });
     return missing;
+  }
+
+  function getDuplicateStickers() {
+    const duplicates = [];
+    SECTIONS.forEach(sec => {
+      const duplicateInSection = [];
+      for(let i=1; i<=sec.n; i++) {
+        const stickerId = `${sec.code}${i}`;
+        if (ownedState[stickerId] && ownedState[stickerId] >= 2) {
+          duplicateInSection.push({
+            id: stickerId, code: sec.code, name: sec.name,
+            flag: sec.flag, flagCdn: FLAG_CDN_MAP[sec.code] || sec.code.toLowerCase(), 
+            number: i, duplicates: ownedState[stickerId] - 1
+          });
+        }
+      }
+      if (duplicateInSection.length > 0) {
+        duplicates.push({
+          code: sec.code, name: sec.name, flag: sec.flag,
+          flagCdn: FLAG_CDN_MAP[sec.code] || sec.code.toLowerCase(),
+          stickers: duplicateInSection, count: duplicateInSection.length
+        });
+      }
+    });
+    return duplicates;
   }
 
   async function generatePDF() {
@@ -976,12 +1013,107 @@
     } catch (error) { console.error('Error generando PDF:', error); showToast('❌ Error al generar PDF. Intenta de nuevo.', 2500); }
   }
 
+  // Nueva función para exportar PDF de repetidas
+  async function generateDuplicatesPDF() {
+    const duplicateData = getDuplicateStickers();
+    if (duplicateData.length === 0) { showToast('🎉 ¡No tienes cromos repetidos!', 2000); return; }
+
+    try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 12;
+      
+      doc.setFillColor(4, 18, 46);
+      doc.rect(0, 0, pageWidth, 35, 'F');
+      doc.setDrawColor(245, 197, 66);
+      doc.setLineWidth(1.5);
+      doc.line(0, 35, pageWidth, 35);
+      doc.setTextColor(245, 197, 66);
+      doc.setFontSize(24);
+      doc.setFont('helvetica', 'bold');
+      doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 15, { align: 'center' });
+      doc.setTextColor(138, 157, 192);
+      doc.setFontSize(8);
+      doc.text('PANINI DIGITAL ALBUM · EDITION GOLD', pageWidth / 2, 22, { align: 'center' });
+      doc.setTextColor(245, 197, 66);
+      doc.setFontSize(9);
+      doc.text('SEBASTIAN NAVARRO', pageWidth / 2, 30, { align: 'center' });
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(8);
+      doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}`, margin, 42);
+      const totalDuplicates = duplicateData.reduce((sum, team) => sum + team.count, 0);
+      doc.text(`Total de cromos repetidos: ${totalDuplicates}`, margin, 47);
+      doc.text(`Progreso total: ${Math.round((getOwnedCount() / TOTAL_STICKERS) * 100)}% completado`, margin, 52);
+
+      let yPos = 60;
+      const maxY = pageHeight - 20;
+      const flagCache = {};
+      
+      for (const team of duplicateData) {
+        if (yPos + 25 > maxY) { doc.addPage(); yPos = 20; addDuplicatesFooter(doc, pageWidth, pageHeight, margin); }
+        doc.setFillColor(15, 38, 72);
+        doc.roundedRect(margin, yPos, pageWidth - (margin * 2), 4, 2, 2, 'F');
+        const flagCode = team.flagCdn;
+        let flagImg = null;
+        if (!flagCache[flagCode]) {
+          try {
+            const flagUrl = `https://flagcdn.com/w40/${flagCode}.png`;
+            flagImg = await loadImage(flagUrl);
+            flagCache[flagCode] = flagImg;
+          } catch (e) { console.warn(`No se pudo cargar bandera para ${team.code}`, e); flagCache[flagCode] = null; }
+        } else { flagImg = flagCache[flagCode]; }
+
+        if (flagImg && team.code !== 'FWC' && team.code !== 'CC') {
+          try { doc.addImage(flagImg, 'PNG', margin + 2, yPos + 0.5, 4, 3); } catch (e) {}
+          doc.setTextColor(245, 197, 66); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text(`${team.code} - ${team.name}`, margin + 11, yPos + 3);
+        } else {
+          doc.setTextColor(245, 197, 66); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text(`${team.code} - ${team.name}`, margin + 3, yPos + 3);
+        }
+        doc.setTextColor(255, 140, 0); doc.setFontSize(8);
+        doc.text(`(${team.count} repetidos)`, pageWidth - margin - 25, yPos + 2.5, { align: 'right' });
+        yPos += 6;
+
+        const stickersPerRow = 20, stickerWidth = 7.5, stickerHeight = 3, startX = margin + 2;
+        for (let i = 0; i < team.stickers.length; i += stickersPerRow) {
+          if (yPos + stickerHeight + 2 > maxY) { doc.addPage(); yPos = 20; addDuplicatesFooter(doc, pageWidth, pageHeight, margin); }
+          const row = team.stickers.slice(i, i + stickersPerRow);
+          row.forEach((sticker, index) => {
+            const x = startX + (index * (stickerWidth + 2));
+            doc.setFillColor(255, 200, 100); doc.roundedRect(x, yPos, stickerWidth, stickerHeight, 1.5, 1.5, 'F');
+            doc.setDrawColor(0, 0, 0); doc.setLineWidth(0.3); doc.roundedRect(x, yPos, stickerWidth, stickerHeight, 1.5, 1.5, 'S');
+            doc.setTextColor(0, 0, 0); doc.setFontSize(6); doc.setFont('courier', 'bold');
+            doc.text(sticker.id, x + stickerWidth/2, yPos + 2, { align: 'center' });
+          });
+          yPos += stickerHeight + 1.5;
+        }
+        yPos += 2;
+      }
+      addDuplicatesFooter(doc, pageWidth, pageHeight, margin);
+      const fileName = `Panini2026_Repetidas_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+      showToast(`✅ PDF de repetidas generado: ${fileName}`, 2500);
+    } catch (error) { console.error('Error generando PDF de repetidas:', error); showToast('❌ Error al generar PDF. Intenta de nuevo.', 2500); }
+  }
+
   function addFooter(doc, pageWidth, pageHeight, margin) {
     const footerY = pageHeight - 12;
     doc.setDrawColor(245, 197, 66); doc.setLineWidth(0.3);
     doc.line(margin, footerY - 3, pageWidth - margin, footerY - 3);
     doc.setTextColor(100, 100, 100); doc.setFontSize(6); doc.setFont('helvetica', 'normal');
     doc.text('FIFA World Cup 2026 - Panini Digital Album - Lista de Cromos Faltantes', margin, footerY);
+    doc.text(`© ${new Date().getFullYear()} - Generado por Sebastián Navarro`, pageWidth - margin, footerY, { align: 'right' });
+  }
+
+  function addDuplicatesFooter(doc, pageWidth, pageHeight, margin) {
+    const footerY = pageHeight - 12;
+    doc.setDrawColor(245, 197, 66); doc.setLineWidth(0.3);
+    doc.line(margin, footerY - 3, pageWidth - margin, footerY - 3);
+    doc.setTextColor(100, 100, 100); doc.setFontSize(6); doc.setFont('helvetica', 'normal');
+    doc.text('FIFA World Cup 2026 - Panini Digital Album - Lista de Cromos Repetidos', margin, footerY);
     doc.text(`© ${new Date().getFullYear()} - Generado por Sebastián Navarro`, pageWidth - margin, footerY, { align: 'right' });
   }
 
@@ -1012,7 +1144,18 @@
       if(cardDiv) { cardDiv.classList.toggle('complete', collected === sec.n); applyCurrentView(cardDiv, sec, collected); }
     });
     const pdfBtn = document.getElementById('pdfBtn');
-    pdfBtn.classList.toggle('visible', currentView === 'missing');
+    pdfBtn.classList.toggle('visible', currentView === 'missing' || currentView === 'duplicates');
+    
+    // Cambiar texto y función del botón PDF según la vista actual
+    if (currentView === 'missing') {
+      pdfBtn.textContent = '📄 Exportar PDF';
+      pdfBtn.onclick = generatePDF;
+    } else if (currentView === 'duplicates') {
+      pdfBtn.textContent = '📄 Exportar PDF Repetidas';
+      pdfBtn.onclick = generateDuplicatesPDF;
+    } else {
+      pdfBtn.onclick = generatePDF;
+    }
   }
   
   function applyCurrentView(cardDiv, sec, collected) {
@@ -1052,60 +1195,141 @@
     else if(count >= 2) { el.classList.add('duplicate'); const b = document.createElement('div'); b.className = 'duplicate-badge'; b.textContent = count-1; el.appendChild(b); }
   }
 
-  // === NUEVO: Función que maneja el doble toque ===
   let tapTimer = null;
 
-function handleStickerTouch(sid, e) {
-  e.stopPropagation();
-  e.preventDefault();
-  
-  const currentTime = new Date().getTime();
-  const tapLength = currentTime - lastTapTime;
-  
-  if (tapLength < DOUBLE_TAP_DELAY && tapLength > 0) {
-    // ¡DOBLE TOQUE! Cancelar el temporizador del primer toque
-    clearTimeout(tapTimer);
-    tapTimer = null;
-    lastTapTime = 0;
+  function handleStickerTouch(sid, e) {
+    e.stopPropagation();
+    e.preventDefault();
     
-    // Mostrar modal de deshacer (sin sumar sticker)
-    const count = ownedState[sid] || 0;
-    if (count >= 1) {
-      showUndoModal(sid);
-    } else {
-      showToast(`${sid} no está marcado`, 1200);
-    }
-  } else {
-    // POSIBLE PRIMER TOQUE: esperar a ver si viene otro
-    lastTapTime = currentTime;
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - lastTapTime;
     
-    // Cancelar cualquier temporizador pendiente
-    if (tapTimer) clearTimeout(tapTimer);
-    
-    // Retrasar la acción de marcar para esperar un posible segundo toque
-    tapTimer = setTimeout(() => {
-      handleStickerClick(sid);
+    if (tapLength < DOUBLE_TAP_DELAY && tapLength > 0) {
+      // ¡DOBLE TOQUE! Cancelar el temporizador del primer toque
+      clearTimeout(tapTimer);
       tapTimer = null;
       lastTapTime = 0;
-    }, DOUBLE_TAP_DELAY);
+      
+      // Mostrar modal de deshacer (sin sumar sticker)
+      const count = ownedState[sid] || 0;
+      if (count >= 1) {
+        showUndoModal(sid);
+      } else {
+        showToast(`${sid} no está marcado`, 1200);
+      }
+    } else {
+      // POSIBLE PRIMER TOQUE: esperar a ver si viene otro
+      lastTapTime = currentTime;
+      
+      // Cancelar cualquier temporizador pendiente
+      if (tapTimer) clearTimeout(tapTimer);
+      
+      // Retrasar la acción de marcar para esperar un posible segundo toque
+      tapTimer = setTimeout(() => {
+        handleStickerClick(sid);
+        tapTimer = null;
+        lastTapTime = 0;
+      }, DOUBLE_TAP_DELAY);
+    }
   }
-}
+
+  // Nueva función para manejar el clic en el contador de equipo
+  function handleTeamStatsClick(secCode) {
+    const cardDiv = document.getElementById(`card-${secCode}`);
+    if (!cardDiv) return;
+    
+    const stickers = cardDiv.querySelectorAll('.sticker');
+    let allMarked = true;
+    
+    // Verificar si todos los stickers ya están marcados
+    for (let sticker of stickers) {
+      const sid = sticker.getAttribute('data-sticker-id');
+      if (!ownedState[sid] || ownedState[sid] < 1) {
+        allMarked = false;
+        break;
+      }
+    }
+    
+    if (allMarked) {
+      // Si todos están marcados, guardar estado actual y desmarcar solo los que se marcaron en esta acción
+      // Para simplificar: si todos están marcados, mostrar un toast y no hacer nada
+      showToast(`✅ ${secCode} ya está completo`, 1500);
+      return;
+    }
+    
+    // Guardar el estado actual antes de modificar
+    const previousState = {...ownedState};
+    
+    // Marcar todos los stickers que no están marcados
+    for (let sticker of stickers) {
+      const sid = sticker.getAttribute('data-sticker-id');
+      if (!ownedState[sid] || ownedState[sid] < 1) {
+        ownedState[sid] = 1;
+      }
+    }
+    
+    persist();
+    updateAllStickersUI(secCode);
+    updateGlobalStats();
+    showToast(`✅ Todos los stickers de ${secCode} marcados`, 1500);
+  }
+
+  function updateAllStickersUI(secCode) {
+    const cardDiv = document.getElementById(`card-${secCode}`);
+    if (!cardDiv) return;
+    
+    const stickers = cardDiv.querySelectorAll('.sticker');
+    stickers.forEach(sticker => {
+      const sid = sticker.getAttribute('data-sticker-id');
+      updateStickerAppearance(sticker, sid);
+    });
+  }
+
   function renderAll() {
     const container = document.getElementById('teamsContainer'); container.innerHTML = '';
     SECTIONS.forEach(sec => {
       const card = document.createElement('div'); card.className = 'team-card'; card.id = `card-${sec.code}`;
       card.dataset.code = sec.code.toLowerCase(); card.dataset.name = sec.name.toLowerCase();
       const header = document.createElement('div'); header.className = 'team-header';
-      header.innerHTML = `<span class="team-flag">${sec.flag}</span><span class="team-code">${sec.code}</span><span class="team-name">${sec.name}</span><div class="team-stats"><span id="pn-${sec.code}" style="font-weight:600;">0/${sec.n}</span><div class="team-progress-bar"><div class="team-progress-fill" id="pb-${sec.code}" style="width:0%"></div></div><span class="complete-tag">✓ COMPLETO</span></div>`;
+      header.innerHTML = `<span class="team-flag">${sec.flag}</span><span class="team-code">${sec.code}</span><span class="team-name">${sec.name}</span><div class="team-stats" id="team-stats-${sec.code}"><span id="pn-${sec.code}" style="font-weight:600;">0/${sec.n}</span><div class="team-progress-bar"><div class="team-progress-fill" id="pb-${sec.code}" style="width:0%"></div></div><span class="complete-tag">✓ COMPLETO</span></div>`;
       card.appendChild(header);
+      
+      // Agregar evento click al team-stats
+      const teamStatsDiv = header.querySelector('.team-stats');
+      teamStatsDiv.onclick = (e) => {
+        e.stopPropagation();
+        handleTeamStatsClick(sec.code);
+      };
+      
       const gridDiv = document.createElement('div'); gridDiv.className = 'sticker-grid';
+      
+      // Para FWC, agregar sticker 00 primero
+      if (sec.code === 'FWC') {
+        const sid00 = 'FWC00';
+        const count00 = ownedState[sid00] || 0;
+        const el00 = document.createElement('div'); 
+        el00.className = 'sticker'; 
+        el00.textContent = sid00; 
+        el00.setAttribute('data-sticker-id', sid00);
+        if(count00 === 1) el00.classList.add('owned');
+        else if(count00 >= 2) { 
+          el00.classList.add('duplicate'); 
+          const b = document.createElement('div'); 
+          b.className = 'duplicate-badge'; 
+          b.textContent = count00-1; 
+          el00.appendChild(b); 
+        }
+        el00.onclick = (e) => { handleStickerTouch(sid00, e); };
+        el00.addEventListener('contextmenu', (e) => e.preventDefault());
+        gridDiv.appendChild(el00);
+      }
+      
       for(let i=1; i<=sec.n; i++) {
         const sid = `${sec.code}${i}`, count = ownedState[sid] || 0;
         const el = document.createElement('div'); el.className = 'sticker'; el.textContent = sid; el.setAttribute('data-sticker-id', sid);
         if(count === 1) el.classList.add('owned');
         else if(count >= 2) { el.classList.add('duplicate'); const b = document.createElement('div'); b.className = 'duplicate-badge'; b.textContent = count-1; el.appendChild(b); }
         
-        // === NUEVO: Solo dos event listeners, simple y limpio ===
         el.onclick = (e) => { handleStickerTouch(sid, e); };
         el.addEventListener('contextmenu', (e) => e.preventDefault());
         
@@ -1119,39 +1343,39 @@ function handleStickerTouch(sid, e) {
   }
 
   function showUndoModal(stickerId) {
-  const count = ownedState[stickerId] || 0;
-  if(count === 0) { showToast(`${stickerId} no está marcado`, 1200); return; }
-  
-  // Resetear todo para evitar conflictos
-  lastTapTime = 0;
-  if (tapTimer) { clearTimeout(tapTimer); tapTimer = null; }
-  
-  const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
-  const dialog = document.createElement('div'); dialog.className = 'modal-dialog';
-  dialog.innerHTML = `<p>¿Deseas deshacer ${stickerId}? (Estado: ${count > 1 ? 'Repetida x'+(count-1) : 'Marcada'})</p><div class="modal-buttons"><button class="btn-undo">↩️ Deshacer</button><button class="btn-close">✖️ Cerrar</button></div>`;
-  
-  dialog.querySelector('.btn-undo').onclick = (e) => { 
-    e.stopPropagation(); 
-    e.preventDefault();
-    undoSticker(stickerId); 
-    document.body.removeChild(overlay); 
-  };
-  
-  dialog.querySelector('.btn-close').onclick = (e) => { 
-    e.stopPropagation(); 
-    e.preventDefault();
-    document.body.removeChild(overlay); 
-  };
-  
-  overlay.onclick = (e) => { 
-    if(e.target === overlay) {
+    const count = ownedState[stickerId] || 0;
+    if(count === 0) { showToast(`${stickerId} no está marcado`, 1200); return; }
+    
+    // Resetear todo para evitar conflictos
+    lastTapTime = 0;
+    if (tapTimer) { clearTimeout(tapTimer); tapTimer = null; }
+    
+    const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
+    const dialog = document.createElement('div'); dialog.className = 'modal-dialog';
+    dialog.innerHTML = `<p>¿Deseas deshacer ${stickerId}? (Estado: ${count > 1 ? 'Repetida x'+(count-1) : 'Marcada'})</p><div class="modal-buttons"><button class="btn-undo">↩️ Deshacer</button><button class="btn-close">✖️ Cerrar</button></div>`;
+    
+    dialog.querySelector('.btn-undo').onclick = (e) => { 
+      e.stopPropagation(); 
+      e.preventDefault();
+      undoSticker(stickerId); 
       document.body.removeChild(overlay); 
-    }
-  };
-  
-  overlay.appendChild(dialog); 
-  document.body.appendChild(overlay);
-}
+    };
+    
+    dialog.querySelector('.btn-close').onclick = (e) => { 
+      e.stopPropagation(); 
+      e.preventDefault();
+      document.body.removeChild(overlay); 
+    };
+    
+    overlay.onclick = (e) => { 
+      if(e.target === overlay) {
+        document.body.removeChild(overlay); 
+      }
+    };
+    
+    overlay.appendChild(dialog); 
+    document.body.appendChild(overlay);
+  }
 
   function undoSticker(stickerId) {
     const count = ownedState[stickerId] || 0; if(count === 0) return;
@@ -1172,7 +1396,10 @@ function handleStickerTouch(sid, e) {
     const el = document.querySelector(`.sticker[data-sticker-id="${stickerId}"]`);
     if(el) { updateStickerAppearance(el, stickerId); el.classList.add('sticker-pop'); setTimeout(() => el.classList.remove('sticker-pop'), 200);
       const card = el.closest('.team-card'); if(card) { const sec = SECTIONS.find(s => s.code === card.id.replace('card-',''));
-        if(sec) { let c = 0; for(let i=1; i<=sec.n; i++) if(ownedState[`${sec.code}${i}`] >= 1) c++; applyCurrentView(card, sec, c); } } }
+        if(sec) { let c = 0; for(let i=1; i<=sec.n; i++) if(ownedState[`${sec.code}${i}`] >= 1) c++; 
+          // También contar el sticker 00 para FWC
+          if(sec.code === 'FWC' && ownedState['FWC00'] >= 1) c++;
+          applyCurrentView(card, sec, c); } } }
   }
 
   function filterTeams() {
@@ -1202,7 +1429,6 @@ function handleStickerTouch(sid, e) {
   document.getElementById('albumBtn').onclick = () => setView('album');
   document.getElementById('missingBtn').onclick = () => setView('missing');
   document.getElementById('duplicatesBtn').onclick = () => setView('duplicates');
-  document.getElementById('pdfBtn').onclick = generatePDF;
   document.getElementById('searchTeam').addEventListener('input', filterTeams);
 
   renderAll();
