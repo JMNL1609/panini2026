@@ -14,6 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=Bebas+Neue&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -197,6 +198,7 @@
     .gold-text { color: var(--gold); }
     .green-text { color: #2AD18A; }
     .red-text { color: #FF6B6B; }
+    .orange-text { color: #FF8C00; }
 
     .progress-container {
       grid-column: 1 / -1;
@@ -234,7 +236,7 @@
     .action-bar {
       padding: var(--space-sm) var(--space-md);
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
       gap: var(--space-sm);
       align-items: center;
       background: rgba(6, 14, 28, 0.8);
@@ -243,7 +245,7 @@
     }
 
     .search-field {
-      grid-column: 1 / -1;
+      grid-column: span 1;
       min-width: 0;
       background: #0A1125;
       border: 1px solid var(--border-glow);
@@ -301,40 +303,30 @@
       background: rgba(220, 53, 69, 0.2);
       border: 1px solid #dc3545;
       color: #ff6b6b;
-      display: none;
-    }
-
-    .btn-pdf.visible {
       display: inline-flex;
     }
 
-    .flags-nav {
-      padding: var(--space-sm) var(--space-md);
+    /* NUEVO: Grid de banderas 5x10 */
+    .flags-grid {
+      padding: var(--space-md);
       background: rgba(10, 20, 40, 0.7);
       backdrop-filter: blur(8px);
       border-bottom: 1px solid rgba(245,197,66,0.2);
-      display: flex;
-      flex-wrap: nowrap;
-      gap: var(--space-sm);
-      align-items: center;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: var(--space-xs);
     }
 
-    .flags-nav::-webkit-scrollbar {
-      display: none;
-    }
-
-    .flag-btn {
+    .flag-btn-grid {
       background: rgba(20, 30, 55, 0.8);
       border: 1px solid rgba(245,197,66,0.3);
       border-radius: 30px;
-      padding: var(--space-sm) var(--space-md);
-      font-size: 0.8rem;
+      padding: var(--space-xs) var(--space-xs);
+      font-size: 0.7rem;
       font-weight: 600;
-      display: inline-flex;
+      display: flex;
       align-items: center;
+      justify-content: center;
       gap: 4px;
       cursor: pointer;
       transition: all 0.2s;
@@ -342,10 +334,9 @@
       color: var(--text-light);
       backdrop-filter: blur(4px);
       min-height: 44px;
-      flex-shrink: 0;
     }
 
-    .flag-btn:active {
+    .flag-btn-grid:active {
       transform: scale(0.94);
       background: rgba(245,197,66,0.3);
     }
@@ -660,81 +651,75 @@
       color: white;
     }
 
-    /* TABLET / HORIZONTAL (600dp+) */
+    .qr-container {
+      padding: var(--space-xl);
+      text-align: center;
+    }
+
+    .qr-box {
+      background: white;
+      padding: var(--space-lg);
+      border-radius: 20px;
+      display: inline-block;
+      margin: var(--space-lg) 0;
+    }
+
+    .qr-data {
+      background: rgba(0,0,0,0.5);
+      padding: var(--space-md);
+      border-radius: 12px;
+      font-family: monospace;
+      font-size: 0.7rem;
+      word-break: break-all;
+      margin-top: var(--space-md);
+    }
+
+    .back-btn {
+      margin-top: var(--space-lg);
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
     @media (min-width: 600px) {
       .stats-panel {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(5, 1fr);
         gap: var(--space-md);
         padding: var(--space-md) var(--space-lg);
       }
-
       .progress-container {
         grid-column: 1 / -1;
       }
-
-      .action-bar {
-        grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
-        padding: var(--space-sm) var(--space-lg);
-      }
-
-      .search-field {
-        grid-column: auto;
-      }
-
       .teams-grid {
         grid-template-columns: repeat(2, 1fr);
         padding: var(--space-lg);
         gap: var(--space-lg);
       }
-
       .sticker {
         width: 56px;
         height: 40px;
         font-size: 0.65rem;
       }
-
       .sticker-grid {
         justify-content: center;
       }
-
-      .team-code {
-        font-size: 1.4rem;
-      }
-
-      .team-name {
-        font-size: 0.7rem;
-      }
-
-      .btn {
-        font-size: 0.75rem;
-      }
-
-      .flag-btn {
-        font-size: 0.85rem;
-        padding: var(--space-sm) var(--space-lg);
-      }
     }
 
-    /* DESKTOP (900dp+) */
     @media (min-width: 900px) {
       .teams-grid {
         grid-template-columns: repeat(3, 1fr);
         max-width: 1400px;
       }
-
-      .main-title {
-        font-size: clamp(2.5rem, 5vw, 3.8rem);
-        letter-spacing: 6px;
-      }
-
-      .sticker {
-        width: 58px;
-        height: 36px;
-        font-size: 0.7rem;
+      .flags-grid {
+        grid-template-columns: repeat(10, 1fr);
       }
     }
 
-    /* LARGE DESKTOP (1200dp+) */
     @media (min-width: 1200px) {
       .teams-grid {
         grid-template-columns: repeat(4, 1fr);
@@ -745,46 +730,67 @@
 </head>
 <body>
 
-<div class="hero" id="topPage">
-  <div class="trophy-icon">🏆✨⚽</div>
-  <h1 class="main-title">FIFA WORLD CUP 2026</h1>
-  <div class="subhead">PANINI DIGITAL ALBUM · EDITION GOLD</div>
-  <div class="owner-badge">
-    <span>👤</span>
-    <span style="letter-spacing: 1.5px;">SEBASTIAN NAVARRO</span>
-    <span style="font-size:1rem;">🇲🇽🇺🇸🇨🇦</span>
+<!-- Página principal del álbum -->
+<div id="mainPage" class="page active">
+  <div class="hero" id="topPage">
+    <div class="trophy-icon">🏆✨⚽</div>
+    <h1 class="main-title">FIFA WORLD CUP 2026</h1>
+    <div class="subhead">PANINI DIGITAL ALBUM · EDITION GOLD</div>
+    <div class="owner-badge">
+      <span>👤</span>
+      <span style="letter-spacing: 1.5px;">SEBASTIAN NAVARRO</span>
+      <span style="font-size:1rem;">🇲🇽🇺🇸🇨🇦</span>
+    </div>
+  </div>
+
+  <div class="stats-panel">
+    <div class="stat-card"><div class="stat-number green-text" id="stat-owned">0</div><div class="stat-label">TENGO</div></div>
+    <div class="stat-card"><div class="stat-number red-text" id="stat-missing">0</div><div class="stat-label">FALTAN</div></div>
+    <div class="stat-card"><div class="stat-number gold-text" id="stat-total">0</div><div class="stat-label">TOTAL</div></div>
+    <div class="stat-card"><div class="stat-number gold-text" id="stat-percent">0%</div><div class="stat-label">COMPLETO</div></div>
+    <div class="stat-card"><div class="stat-number orange-text" id="stat-duplicates">0</div><div class="stat-label">REPETIDAS</div></div>
+    <div class="progress-container">
+      <div class="progress-header"><span>🏟️ PROGRESO MUNDIAL 2026</span><span id="progress-ratio">0/0</span></div>
+      <div class="progress-bar-bg"><div class="progress-fill-main" id="global-progress-fill"></div></div>
+    </div>
+  </div>
+
+  <div class="action-bar">
+    <div class="search-field">
+      <span>🔍</span>
+      <input type="text" id="searchTeam" placeholder="Buscar equipo o código (ej: MEX, Brasil)" autocomplete="off">
+    </div>
+    <button class="btn active-view" id="albumBtn">📒 Álbum</button>
+    <button class="btn" id="missingBtn">🔍 Me faltan</button>
+    <button class="btn" id="duplicatesBtn">🔄 Repetidas</button>
+    <button class="btn" id="qrBtn">📱 QR</button>
+    <button class="btn btn-pdf" id="pdfBtn">📄 Exportar PDF</button>
+  </div>
+
+  <!-- Grid de banderas 5x10 -->
+  <div class="flags-grid" id="flagsGridContainer"></div>
+
+  <div class="teams-grid" id="teamsContainer"></div>
+  <div class="world-cup-footer">
+    ⚽ 48 EQUIPOS · 988 CROMOS OFICIALES ⚽<br>
+    Toca cada sticker para coleccionar · Doble toque para deshacer
   </div>
 </div>
 
-<div class="stats-panel">
-  <div class="stat-card"><div class="stat-number green-text" id="stat-owned">0</div><div class="stat-label">TENGO</div></div>
-  <div class="stat-card"><div class="stat-number red-text" id="stat-missing">0</div><div class="stat-label">FALTAN</div></div>
-  <div class="stat-card"><div class="stat-number gold-text" id="stat-total">0</div><div class="stat-label">TOTAL</div></div>
-  <div class="stat-card"><div class="stat-number gold-text" id="stat-percent">0%</div><div class="stat-label">COMPLETO</div></div>
-  <div class="progress-container">
-    <div class="progress-header"><span>🏟️ PROGRESO MUNDIAL 2026</span><span id="progress-ratio">0/0</span></div>
-    <div class="progress-bar-bg"><div class="progress-fill-main" id="global-progress-fill"></div></div>
+<!-- Página QR -->
+<div id="qrPage" class="page">
+  <div class="hero">
+    <div class="trophy-icon">📱🔲</div>
+    <h1 class="main-title">COMPARTIR REPETIDAS</h1>
+    <div class="subhead">ESCANEA EL CÓDIGO QR</div>
+  </div>
+  <div class="qr-container">
+    <div class="qr-box" id="qrcode"></div>
+    <div class="qr-data" id="qrDataText"></div>
+    <button class="btn back-btn" id="backToAlbumBtn">← Volver al Álbum</button>
   </div>
 </div>
 
-<div class="action-bar">
-  <div class="search-field">
-    <span>🔍</span>
-    <input type="text" id="searchTeam" placeholder="Buscar equipo o código (ej: MEX, Brasil)" autocomplete="off">
-  </div>
-  <button class="btn active-view" id="albumBtn">📒 Álbum</button>
-  <button class="btn" id="missingBtn">🔍 Me faltan</button>
-  <button class="btn" id="duplicatesBtn">🔄 Repetidas</button>
-  <button class="btn btn-pdf" id="pdfBtn">📄 Exportar PDF</button>
-</div>
-
-<div class="flags-nav" id="flagsNavContainer"></div>
-
-<div class="teams-grid" id="teamsContainer"></div>
-<div class="world-cup-footer">
-  ⚽ 48 EQUIPOS · 988 CROMOS OFICIALES ⚽<br>
-  Toca cada sticker para coleccionar · Doble toque para deshacer
-</div>
 <div id="toastMsg" class="toast-notify"></div>
 
 <script>
@@ -841,26 +847,12 @@
     { code:'CC',  name:'Tarjetas Especiales', flag:'⭐',  n:14 },
   ];
 
-  const FLAG_CDN_MAP = {
-    'FWC': 'fifa', 'MEX': 'mx', 'RSA': 'za', 'KOR': 'kr', 'CZE': 'cz',
-    'CAN': 'ca', 'BIH': 'ba', 'QAT': 'qa', 'SUI': 'ch', 'BRA': 'br',
-    'MAR': 'ma', 'HAI': 'ht', 'SCO': 'gb-sct', 'USA': 'us', 'PAR': 'py',
-    'AUS': 'au', 'TUR': 'tr', 'GER': 'de', 'CUW': 'cw', 'CIV': 'ci',
-    'ECU': 'ec', 'NED': 'nl', 'JPN': 'jp', 'SWE': 'se', 'TUN': 'tn',
-    'BEL': 'be', 'EGY': 'eg', 'IRN': 'ir', 'NZL': 'nz', 'ESP': 'es',
-    'CPV': 'cv', 'KSA': 'sa', 'URU': 'uy', 'FRA': 'fr', 'SEN': 'sn',
-    'IRQ': 'iq', 'NOR': 'no', 'ARG': 'ar', 'ALG': 'dz', 'AUT': 'at',
-    'JOR': 'jo', 'POR': 'pt', 'COD': 'cd', 'UZB': 'uz', 'COL': 'co',
-    'ENG': 'gb-eng', 'CRO': 'hr', 'GHA': 'gh', 'PAN': 'pa', 'CC': 'star'
-  };
-
   const TOTAL_STICKERS = SECTIONS.reduce((acc, s) => acc + s.n, 0);
   let ownedState = {};
   let currentView = 'album';
-
-  // Variables para el doble toque - RETRASO REDUCIDO A 300ms
   let lastTapTime = 0;
-  const DOUBLE_TAP_DELAY = 300; // Reducido de 400ms a 300ms
+  const DOUBLE_TAP_DELAY = 300;
+  let tapTimer = null;
 
   try {
     const saved = localStorage.getItem('panini2026_app');
@@ -879,6 +871,24 @@
     return Object.values(ownedState).filter(v => v >= 2).length;
   }
 
+  function getDuplicateStickersList() {
+    const dupList = [];
+    SECTIONS.forEach(sec => {
+      for(let i=1; i<=sec.n; i++) {
+        const stickerId = `${sec.code}${i}`;
+        if (ownedState[stickerId] && ownedState[stickerId] >= 2) {
+          for(let j=1; j <= (ownedState[stickerId] - 1); j++) {
+            dupList.push(stickerId);
+          }
+        }
+      }
+      if(sec.code === 'FWC' && ownedState['FWC00'] && ownedState['FWC00'] >= 2) {
+        for(let j=1; j <= (ownedState['FWC00'] - 1); j++) dupList.push('FWC00');
+      }
+    });
+    return dupList;
+  }
+
   function getMissingStickers() {
     const missing = [];
     SECTIONS.forEach(sec => {
@@ -886,18 +896,14 @@
       for(let i=1; i<=sec.n; i++) {
         const stickerId = `${sec.code}${i}`;
         if (!ownedState[stickerId] || ownedState[stickerId] === 0) {
-          missingInSection.push({
-            id: stickerId, code: sec.code, name: sec.name,
-            flag: sec.flag, flagCdn: FLAG_CDN_MAP[sec.code] || sec.code.toLowerCase(), number: i
-          });
+          missingInSection.push({ id: stickerId, number: i });
         }
       }
+      if(sec.code === 'FWC' && (!ownedState['FWC00'] || ownedState['FWC00'] === 0)) {
+        missingInSection.push({ id: 'FWC00', number: 0 });
+      }
       if (missingInSection.length > 0) {
-        missing.push({
-          code: sec.code, name: sec.name, flag: sec.flag,
-          flagCdn: FLAG_CDN_MAP[sec.code] || sec.code.toLowerCase(),
-          stickers: missingInSection, count: missingInSection.length
-        });
+        missing.push({ code: sec.code, name: sec.name, flag: sec.flag, stickers: missingInSection, count: missingInSection.length });
       }
     });
     return missing;
@@ -910,19 +916,14 @@
       for(let i=1; i<=sec.n; i++) {
         const stickerId = `${sec.code}${i}`;
         if (ownedState[stickerId] && ownedState[stickerId] >= 2) {
-          duplicateInSection.push({
-            id: stickerId, code: sec.code, name: sec.name,
-            flag: sec.flag, flagCdn: FLAG_CDN_MAP[sec.code] || sec.code.toLowerCase(), 
-            number: i, duplicates: ownedState[stickerId] - 1
-          });
+          duplicateInSection.push({ id: stickerId, number: i, duplicates: ownedState[stickerId] - 1 });
         }
       }
+      if(sec.code === 'FWC' && ownedState['FWC00'] && ownedState['FWC00'] >= 2) {
+        duplicateInSection.push({ id: 'FWC00', number: 0, duplicates: ownedState['FWC00'] - 1 });
+      }
       if (duplicateInSection.length > 0) {
-        duplicates.push({
-          code: sec.code, name: sec.name, flag: sec.flag,
-          flagCdn: FLAG_CDN_MAP[sec.code] || sec.code.toLowerCase(),
-          stickers: duplicateInSection, count: duplicateInSection.length
-        });
+        duplicates.push({ code: sec.code, name: sec.name, flag: sec.flag, stickers: duplicateInSection, count: duplicateInSection.length });
       }
     });
     return duplicates;
@@ -931,7 +932,6 @@
   async function generatePDF() {
     const missingData = getMissingStickers();
     if (missingData.length === 0) { showToast('🎉 ¡No tienes cromos faltantes!', 2000); return; }
-
     try {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
@@ -954,70 +954,56 @@
       doc.setTextColor(245, 197, 66);
       doc.setFontSize(9);
       doc.text('SEBASTIAN NAVARRO', pageWidth / 2, 30, { align: 'center' });
-      doc.setTextColor(100, 100, 100);
-      doc.setFontSize(8);
-      doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}`, margin, 42);
-      const totalMissing = missingData.reduce((sum, team) => sum + team.count, 0);
-      doc.text(`Total de cromos faltantes: ${totalMissing} de ${TOTAL_STICKERS}`, margin, 47);
-      doc.text(`Progreso: ${Math.round(((TOTAL_STICKERS - totalMissing) / TOTAL_STICKERS) * 100)}% completado`, margin, 52);
-
-      let yPos = 60;
+      
+      let yPos = 42;
       const maxY = pageHeight - 20;
-      const flagCache = {};
       
       for (const team of missingData) {
-        if (yPos + 25 > maxY) { doc.addPage(); yPos = 20; addFooter(doc, pageWidth, pageHeight, margin); }
+        if (yPos > maxY) { doc.addPage(); yPos = 20; }
         doc.setFillColor(15, 38, 72);
         doc.roundedRect(margin, yPos, pageWidth - (margin * 2), 4, 2, 2, 'F');
-        const flagCode = team.flagCdn;
-        let flagImg = null;
-        if (!flagCache[flagCode]) {
-          try {
-            const flagUrl = `https://flagcdn.com/w40/${flagCode}.png`;
-            flagImg = await loadImage(flagUrl);
-            flagCache[flagCode] = flagImg;
-          } catch (e) { console.warn(`No se pudo cargar bandera para ${team.code}`, e); flagCache[flagCode] = null; }
-        } else { flagImg = flagCache[flagCode]; }
-
-        if (flagImg && team.code !== 'FWC' && team.code !== 'CC') {
-          try { doc.addImage(flagImg, 'PNG', margin + 2, yPos + 0.5, 4, 3); } catch (e) {}
-          doc.setTextColor(245, 197, 66); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
-          doc.text(`${team.code} - ${team.name}`, margin + 11, yPos + 3);
-        } else {
-          doc.setTextColor(245, 197, 66); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
-          doc.text(`${team.code} - ${team.name}`, margin + 3, yPos + 3);
-        }
-        doc.setTextColor(255, 107, 107); doc.setFontSize(8);
-        doc.text(`(${team.count} faltantes)`, pageWidth - margin - 25, yPos + 2.5, { align: 'right' });
+        doc.setTextColor(245, 197, 66);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${team.flag} ${team.code} - ${team.name}`, margin + 2, yPos + 3);
+        doc.setTextColor(255, 107, 107);
+        doc.setFontSize(7);
+        doc.text(`${team.count} faltantes`, pageWidth - margin - 20, yPos + 2.5, { align: 'right' });
         yPos += 6;
-
-        const stickersPerRow = 20, stickerWidth = 7.5, stickerHeight = 3, startX = margin + 2;
-        for (let i = 0; i < team.stickers.length; i += stickersPerRow) {
-          if (yPos + stickerHeight + 2 > maxY) { doc.addPage(); yPos = 20; addFooter(doc, pageWidth, pageHeight, margin); }
-          const row = team.stickers.slice(i, i + stickersPerRow);
-          row.forEach((sticker, index) => {
-            const x = startX + (index * (stickerWidth + 2));
-            doc.setFillColor(255, 255, 255); doc.roundedRect(x, yPos, stickerWidth, stickerHeight, 1.5, 1.5, 'F');
-            doc.setDrawColor(0, 0, 0); doc.setLineWidth(0.3); doc.roundedRect(x, yPos, stickerWidth, stickerHeight, 1.5, 1.5, 'S');
-            doc.setTextColor(0, 0, 0); doc.setFontSize(6); doc.setFont('courier', 'bold');
-            doc.text(sticker.id, x + stickerWidth/2, yPos + 2, { align: 'center' });
-          });
-          yPos += stickerHeight + 1.5;
+        
+        const stickersList = team.stickers.map(s => s.id).sort();
+        let lineText = stickersList.join(', ');
+        doc.setFontSize(6);
+        doc.setFont('courier', 'normal');
+        doc.setTextColor(200, 200, 200);
+        
+        let currentLine = '';
+        let xPos = margin + 2;
+        for(let i=0; i<stickersList.length; i++) {
+          const testLine = currentLine + (currentLine ? ', ' : '') + stickersList[i];
+          const textWidth = doc.getTextWidth(testLine);
+          if(textWidth > pageWidth - margin*2 - 10 && currentLine !== '') {
+            doc.text(currentLine, margin + 2, yPos);
+            yPos += 4;
+            currentLine = stickersList[i];
+            if(yPos > maxY) { doc.addPage(); yPos = 20; }
+          } else {
+            currentLine = testLine;
+          }
         }
+        if(currentLine) { doc.text(currentLine, margin + 2, yPos); yPos += 5; }
         yPos += 2;
       }
-      addFooter(doc, pageWidth, pageHeight, margin);
+      
       const fileName = `Panini2026_Faltantes_${new Date().toISOString().split('T')[0]}.pdf`;
       doc.save(fileName);
       showToast(`✅ PDF generado: ${fileName}`, 2500);
     } catch (error) { console.error('Error generando PDF:', error); showToast('❌ Error al generar PDF. Intenta de nuevo.', 2500); }
   }
 
-  // Nueva función para exportar PDF de repetidas
   async function generateDuplicatesPDF() {
     const duplicateData = getDuplicateStickers();
     if (duplicateData.length === 0) { showToast('🎉 ¡No tienes cromos repetidos!', 2000); return; }
-
     try {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
@@ -1040,120 +1026,78 @@
       doc.setTextColor(245, 197, 66);
       doc.setFontSize(9);
       doc.text('SEBASTIAN NAVARRO', pageWidth / 2, 30, { align: 'center' });
-      doc.setTextColor(100, 100, 100);
-      doc.setFontSize(8);
-      doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}`, margin, 42);
-      const totalDuplicates = duplicateData.reduce((sum, team) => sum + team.count, 0);
-      doc.text(`Total de cromos repetidos: ${totalDuplicates}`, margin, 47);
-      doc.text(`Progreso total: ${Math.round((getOwnedCount() / TOTAL_STICKERS) * 100)}% completado`, margin, 52);
-
-      let yPos = 60;
+      
+      let yPos = 42;
       const maxY = pageHeight - 20;
-      const flagCache = {};
       
       for (const team of duplicateData) {
-        if (yPos + 25 > maxY) { doc.addPage(); yPos = 20; addDuplicatesFooter(doc, pageWidth, pageHeight, margin); }
+        if (yPos > maxY) { doc.addPage(); yPos = 20; }
         doc.setFillColor(15, 38, 72);
         doc.roundedRect(margin, yPos, pageWidth - (margin * 2), 4, 2, 2, 'F');
-        const flagCode = team.flagCdn;
-        let flagImg = null;
-        if (!flagCache[flagCode]) {
-          try {
-            const flagUrl = `https://flagcdn.com/w40/${flagCode}.png`;
-            flagImg = await loadImage(flagUrl);
-            flagCache[flagCode] = flagImg;
-          } catch (e) { console.warn(`No se pudo cargar bandera para ${team.code}`, e); flagCache[flagCode] = null; }
-        } else { flagImg = flagCache[flagCode]; }
-
-        if (flagImg && team.code !== 'FWC' && team.code !== 'CC') {
-          try { doc.addImage(flagImg, 'PNG', margin + 2, yPos + 0.5, 4, 3); } catch (e) {}
-          doc.setTextColor(245, 197, 66); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
-          doc.text(`${team.code} - ${team.name}`, margin + 11, yPos + 3);
-        } else {
-          doc.setTextColor(245, 197, 66); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
-          doc.text(`${team.code} - ${team.name}`, margin + 3, yPos + 3);
-        }
-        doc.setTextColor(255, 140, 0); doc.setFontSize(8);
-        doc.text(`(${team.count} repetidos)`, pageWidth - margin - 25, yPos + 2.5, { align: 'right' });
+        doc.setTextColor(245, 197, 66);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${team.flag} ${team.code} - ${team.name}`, margin + 2, yPos + 3);
+        doc.setTextColor(255, 140, 0);
+        doc.setFontSize(7);
+        doc.text(`${team.count} repetidos`, pageWidth - margin - 20, yPos + 2.5, { align: 'right' });
         yPos += 6;
-
-        const stickersPerRow = 20, stickerWidth = 7.5, stickerHeight = 3, startX = margin + 2;
-        for (let i = 0; i < team.stickers.length; i += stickersPerRow) {
-          if (yPos + stickerHeight + 2 > maxY) { doc.addPage(); yPos = 20; addDuplicatesFooter(doc, pageWidth, pageHeight, margin); }
-          const row = team.stickers.slice(i, i + stickersPerRow);
-          row.forEach((sticker, index) => {
-            const x = startX + (index * (stickerWidth + 2));
-            doc.setFillColor(255, 200, 100); doc.roundedRect(x, yPos, stickerWidth, stickerHeight, 1.5, 1.5, 'F');
-            doc.setDrawColor(0, 0, 0); doc.setLineWidth(0.3); doc.roundedRect(x, yPos, stickerWidth, stickerHeight, 1.5, 1.5, 'S');
-            doc.setTextColor(0, 0, 0); doc.setFontSize(6); doc.setFont('courier', 'bold');
-            doc.text(sticker.id, x + stickerWidth/2, yPos + 2, { align: 'center' });
-          });
-          yPos += stickerHeight + 1.5;
+        
+        const stickersList = team.stickers.flatMap(s => Array(s.duplicates).fill(s.id)).sort();
+        let currentLine = '';
+        for(let i=0; i<stickersList.length; i++) {
+          const testLine = currentLine + (currentLine ? ', ' : '') + stickersList[i];
+          const textWidth = doc.getTextWidth(testLine);
+          if(textWidth > pageWidth - margin*2 - 10 && currentLine !== '') {
+            doc.text(currentLine, margin + 2, yPos);
+            yPos += 4;
+            currentLine = stickersList[i];
+            if(yPos > maxY) { doc.addPage(); yPos = 20; }
+          } else {
+            currentLine = testLine;
+          }
         }
+        if(currentLine) { doc.text(currentLine, margin + 2, yPos); yPos += 5; }
         yPos += 2;
       }
-      addDuplicatesFooter(doc, pageWidth, pageHeight, margin);
+      
       const fileName = `Panini2026_Repetidas_${new Date().toISOString().split('T')[0]}.pdf`;
       doc.save(fileName);
       showToast(`✅ PDF de repetidas generado: ${fileName}`, 2500);
     } catch (error) { console.error('Error generando PDF de repetidas:', error); showToast('❌ Error al generar PDF. Intenta de nuevo.', 2500); }
   }
 
-  function addFooter(doc, pageWidth, pageHeight, margin) {
-    const footerY = pageHeight - 12;
-    doc.setDrawColor(245, 197, 66); doc.setLineWidth(0.3);
-    doc.line(margin, footerY - 3, pageWidth - margin, footerY - 3);
-    doc.setTextColor(100, 100, 100); doc.setFontSize(6); doc.setFont('helvetica', 'normal');
-    doc.text('FIFA World Cup 2026 - Panini Digital Album - Lista de Cromos Faltantes', margin, footerY);
-    doc.text(`© ${new Date().getFullYear()} - Generado por Sebastián Navarro`, pageWidth - margin, footerY, { align: 'right' });
-  }
-
-  function addDuplicatesFooter(doc, pageWidth, pageHeight, margin) {
-    const footerY = pageHeight - 12;
-    doc.setDrawColor(245, 197, 66); doc.setLineWidth(0.3);
-    doc.line(margin, footerY - 3, pageWidth - margin, footerY - 3);
-    doc.setTextColor(100, 100, 100); doc.setFontSize(6); doc.setFont('helvetica', 'normal');
-    doc.text('FIFA World Cup 2026 - Panini Digital Album - Lista de Cromos Repetidos', margin, footerY);
-    doc.text(`© ${new Date().getFullYear()} - Generado por Sebastián Navarro`, pageWidth - margin, footerY, { align: 'right' });
-  }
-
-  function loadImage(url) {
-    return new Promise((resolve, reject) => {
-      const img = new Image(); img.crossOrigin = 'Anonymous';
-      img.onload = () => resolve(img); img.onerror = reject; img.src = url;
-    });
-  }
-
   function updateGlobalStats() {
     const ownedCount = getOwnedCount(), missing = TOTAL_STICKERS - ownedCount;
+    const duplicateCount = getDuplicateCount();
     const percent = TOTAL_STICKERS ? Math.round((ownedCount / TOTAL_STICKERS) * 100) : 0;
     document.getElementById('stat-owned').innerText = ownedCount;
     document.getElementById('stat-missing').innerText = missing;
     document.getElementById('stat-total').innerText = TOTAL_STICKERS;
     document.getElementById('stat-percent').innerText = `${percent}%`;
+    document.getElementById('stat-duplicates').innerText = duplicateCount;
     document.getElementById('progress-ratio').innerText = `${ownedCount}/${TOTAL_STICKERS}`;
     document.getElementById('global-progress-fill').style.width = `${percent}%`;
+    
     SECTIONS.forEach(sec => {
       let collected = 0;
       for(let i=1; i<=sec.n; i++) if(ownedState[`${sec.code}${i}`] >= 1) collected++;
+      if(sec.code === 'FWC' && ownedState['FWC00'] >= 1) collected++;
       const pbFill = document.getElementById(`pb-${sec.code}`);
-      const pnSpan = document.getElementById(`pn-${sec.code}`);
       const cardDiv = document.getElementById(`card-${sec.code}`);
       if(pbFill) pbFill.style.width = `${(collected/sec.n)*100}%`;
-      if(pnSpan) { pnSpan.innerText = `${collected}/${sec.n}`; pnSpan.style.color = collected === sec.n ? '#2AD18A' : '#8A9DC0'; }
       if(cardDiv) { cardDiv.classList.toggle('complete', collected === sec.n); applyCurrentView(cardDiv, sec, collected); }
     });
-    const pdfBtn = document.getElementById('pdfBtn');
-    pdfBtn.classList.toggle('visible', currentView === 'missing' || currentView === 'duplicates');
     
-    // Cambiar texto y función del botón PDF según la vista actual
+    const pdfBtn = document.getElementById('pdfBtn');
     if (currentView === 'missing') {
-      pdfBtn.textContent = '📄 Exportar PDF';
+      pdfBtn.textContent = '📄 Exportar PDF Faltantes';
       pdfBtn.onclick = generatePDF;
     } else if (currentView === 'duplicates') {
       pdfBtn.textContent = '📄 Exportar PDF Repetidas';
       pdfBtn.onclick = generateDuplicatesPDF;
     } else {
+      pdfBtn.textContent = '📄 Exportar PDF';
       pdfBtn.onclick = generatePDF;
     }
   }
@@ -1174,10 +1118,10 @@
     } else { cardDiv.classList.remove('hidden'); }
   }
 
-  function renderFlagsNav() {
-    const fc = document.getElementById('flagsNavContainer'); fc.innerHTML = '';
+  function renderFlagsGrid() {
+    const fc = document.getElementById('flagsGridContainer'); fc.innerHTML = '';
     SECTIONS.forEach(sec => {
-      const fb = document.createElement('div'); fb.className = 'flag-btn';
+      const fb = document.createElement('div'); fb.className = 'flag-btn-grid';
       fb.innerHTML = `${sec.flag} ${sec.code}`;
       fb.onclick = () => {
         const tc = document.getElementById(`card-${sec.code}`);
@@ -1195,36 +1139,22 @@
     else if(count >= 2) { el.classList.add('duplicate'); const b = document.createElement('div'); b.className = 'duplicate-badge'; b.textContent = count-1; el.appendChild(b); }
   }
 
-  let tapTimer = null;
-
   function handleStickerTouch(sid, e) {
     e.stopPropagation();
     e.preventDefault();
-    
     const currentTime = new Date().getTime();
     const tapLength = currentTime - lastTapTime;
     
     if (tapLength < DOUBLE_TAP_DELAY && tapLength > 0) {
-      // ¡DOBLE TOQUE! Cancelar el temporizador del primer toque
       clearTimeout(tapTimer);
       tapTimer = null;
       lastTapTime = 0;
-      
-      // Mostrar modal de deshacer (sin sumar sticker)
       const count = ownedState[sid] || 0;
-      if (count >= 1) {
-        showUndoModal(sid);
-      } else {
-        showToast(`${sid} no está marcado`, 1200);
-      }
+      if (count >= 1) showUndoModal(sid);
+      else showToast(`${sid} no está marcado`, 1200);
     } else {
-      // POSIBLE PRIMER TOQUE: esperar a ver si viene otro
       lastTapTime = currentTime;
-      
-      // Cancelar cualquier temporizador pendiente
       if (tapTimer) clearTimeout(tapTimer);
-      
-      // Retrasar la acción de marcar para esperar un posible segundo toque
       tapTimer = setTimeout(() => {
         handleStickerClick(sid);
         tapTimer = null;
@@ -1233,56 +1163,24 @@
     }
   }
 
-  // Nueva función para manejar el clic en el contador de equipo
   function handleTeamStatsClick(secCode) {
     const cardDiv = document.getElementById(`card-${secCode}`);
     if (!cardDiv) return;
-    
     const stickers = cardDiv.querySelectorAll('.sticker');
-    let allMarked = true;
-    
-    // Verificar si todos los stickers ya están marcados
+    let anyMarked = false;
     for (let sticker of stickers) {
       const sid = sticker.getAttribute('data-sticker-id');
-      if (!ownedState[sid] || ownedState[sid] < 1) {
-        allMarked = false;
-        break;
-      }
+      if (!ownedState[sid] || ownedState[sid] < 1) { ownedState[sid] = 1; anyMarked = true; }
     }
-    
-    if (allMarked) {
-      // Si todos están marcados, guardar estado actual y desmarcar solo los que se marcaron en esta acción
-      // Para simplificar: si todos están marcados, mostrar un toast y no hacer nada
-      showToast(`✅ ${secCode} ya está completo`, 1500);
-      return;
-    }
-    
-    // Guardar el estado actual antes de modificar
-    const previousState = {...ownedState};
-    
-    // Marcar todos los stickers que no están marcados
-    for (let sticker of stickers) {
-      const sid = sticker.getAttribute('data-sticker-id');
-      if (!ownedState[sid] || ownedState[sid] < 1) {
-        ownedState[sid] = 1;
-      }
-    }
-    
-    persist();
-    updateAllStickersUI(secCode);
-    updateGlobalStats();
-    showToast(`✅ Todos los stickers de ${secCode} marcados`, 1500);
+    if(anyMarked) { persist(); updateAllStickersUI(secCode); updateGlobalStats(); showToast(`✅ Todos los stickers de ${secCode} marcados`, 1500); }
+    else { showToast(`✅ ${secCode} ya está completo`, 1500); }
   }
 
   function updateAllStickersUI(secCode) {
     const cardDiv = document.getElementById(`card-${secCode}`);
     if (!cardDiv) return;
-    
     const stickers = cardDiv.querySelectorAll('.sticker');
-    stickers.forEach(sticker => {
-      const sid = sticker.getAttribute('data-sticker-id');
-      updateStickerAppearance(sticker, sid);
-    });
+    stickers.forEach(sticker => updateStickerAppearance(sticker, sticker.getAttribute('data-sticker-id')));
   }
 
   function renderAll() {
@@ -1294,16 +1192,11 @@
       header.innerHTML = `<span class="team-flag">${sec.flag}</span><span class="team-code">${sec.code}</span><span class="team-name">${sec.name}</span><div class="team-stats" id="team-stats-${sec.code}"><span id="pn-${sec.code}" style="font-weight:600;">0/${sec.n}</span><div class="team-progress-bar"><div class="team-progress-fill" id="pb-${sec.code}" style="width:0%"></div></div><span class="complete-tag">✓ COMPLETO</span></div>`;
       card.appendChild(header);
       
-      // Agregar evento click al team-stats
       const teamStatsDiv = header.querySelector('.team-stats');
-      teamStatsDiv.onclick = (e) => {
-        e.stopPropagation();
-        handleTeamStatsClick(sec.code);
-      };
+      teamStatsDiv.onclick = (e) => { e.stopPropagation(); handleTeamStatsClick(sec.code); };
       
       const gridDiv = document.createElement('div'); gridDiv.className = 'sticker-grid';
       
-      // Para FWC, agregar sticker 00 primero
       if (sec.code === 'FWC') {
         const sid00 = 'FWC00';
         const count00 = ownedState[sid00] || 0;
@@ -1312,13 +1205,7 @@
         el00.textContent = sid00; 
         el00.setAttribute('data-sticker-id', sid00);
         if(count00 === 1) el00.classList.add('owned');
-        else if(count00 >= 2) { 
-          el00.classList.add('duplicate'); 
-          const b = document.createElement('div'); 
-          b.className = 'duplicate-badge'; 
-          b.textContent = count00-1; 
-          el00.appendChild(b); 
-        }
+        else if(count00 >= 2) { el00.classList.add('duplicate'); const b = document.createElement('div'); b.className = 'duplicate-badge'; b.textContent = count00-1; el00.appendChild(b); }
         el00.onclick = (e) => { handleStickerTouch(sid00, e); };
         el00.addEventListener('contextmenu', (e) => e.preventDefault());
         gridDiv.appendChild(el00);
@@ -1329,52 +1216,29 @@
         const el = document.createElement('div'); el.className = 'sticker'; el.textContent = sid; el.setAttribute('data-sticker-id', sid);
         if(count === 1) el.classList.add('owned');
         else if(count >= 2) { el.classList.add('duplicate'); const b = document.createElement('div'); b.className = 'duplicate-badge'; b.textContent = count-1; el.appendChild(b); }
-        
         el.onclick = (e) => { handleStickerTouch(sid, e); };
         el.addEventListener('contextmenu', (e) => e.preventDefault());
-        
         gridDiv.appendChild(el);
       }
       const stb = document.createElement('button'); stb.className = 'scroll-top-btn'; stb.textContent = '⬆️ Subir';
       stb.onclick = (e) => { e.stopPropagation(); document.getElementById('topPage').scrollIntoView({ behavior: 'smooth' }); };
       gridDiv.appendChild(stb); card.appendChild(gridDiv); container.appendChild(card);
     });
-    renderFlagsNav(); updateGlobalStats();
+    renderFlagsGrid(); updateGlobalStats();
   }
 
   function showUndoModal(stickerId) {
     const count = ownedState[stickerId] || 0;
     if(count === 0) { showToast(`${stickerId} no está marcado`, 1200); return; }
-    
-    // Resetear todo para evitar conflictos
     lastTapTime = 0;
     if (tapTimer) { clearTimeout(tapTimer); tapTimer = null; }
-    
     const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
     const dialog = document.createElement('div'); dialog.className = 'modal-dialog';
     dialog.innerHTML = `<p>¿Deseas deshacer ${stickerId}? (Estado: ${count > 1 ? 'Repetida x'+(count-1) : 'Marcada'})</p><div class="modal-buttons"><button class="btn-undo">↩️ Deshacer</button><button class="btn-close">✖️ Cerrar</button></div>`;
-    
-    dialog.querySelector('.btn-undo').onclick = (e) => { 
-      e.stopPropagation(); 
-      e.preventDefault();
-      undoSticker(stickerId); 
-      document.body.removeChild(overlay); 
-    };
-    
-    dialog.querySelector('.btn-close').onclick = (e) => { 
-      e.stopPropagation(); 
-      e.preventDefault();
-      document.body.removeChild(overlay); 
-    };
-    
-    overlay.onclick = (e) => { 
-      if(e.target === overlay) {
-        document.body.removeChild(overlay); 
-      }
-    };
-    
-    overlay.appendChild(dialog); 
-    document.body.appendChild(overlay);
+    dialog.querySelector('.btn-undo').onclick = (e) => { e.stopPropagation(); e.preventDefault(); undoSticker(stickerId); document.body.removeChild(overlay); };
+    dialog.querySelector('.btn-close').onclick = (e) => { e.stopPropagation(); e.preventDefault(); document.body.removeChild(overlay); };
+    overlay.onclick = (e) => { if(e.target === overlay) document.body.removeChild(overlay); };
+    overlay.appendChild(dialog); document.body.appendChild(overlay);
   }
 
   function undoSticker(stickerId) {
@@ -1397,7 +1261,6 @@
     if(el) { updateStickerAppearance(el, stickerId); el.classList.add('sticker-pop'); setTimeout(() => el.classList.remove('sticker-pop'), 200);
       const card = el.closest('.team-card'); if(card) { const sec = SECTIONS.find(s => s.code === card.id.replace('card-',''));
         if(sec) { let c = 0; for(let i=1; i<=sec.n; i++) if(ownedState[`${sec.code}${i}`] >= 1) c++; 
-          // También contar el sticker 00 para FWC
           if(sec.code === 'FWC' && ownedState['FWC00'] >= 1) c++;
           applyCurrentView(card, sec, c); } } }
   }
@@ -1426,9 +1289,26 @@
     showToast(view === 'album' ? '📒 Vista Álbum' : view === 'missing' ? '🔍 Mostrando faltantes' : '🔄 Mostrando repetidas', 1500);
   }
 
+  function showQRPage() {
+    const dupList = getDuplicateStickersList();
+    const qrData = JSON.stringify({ stickers: dupList, total: dupList.length, timestamp: Date.now() });
+    document.getElementById('qrDataText').innerHTML = `<strong>📦 ${dupList.length} stickers repetidos</strong><br><small>${qrData.substring(0, 100)}${qrData.length > 100 ? '...' : ''}</small>`;
+    document.getElementById('qrcode').innerHTML = '';
+    new QRCode(document.getElementById('qrcode'), { text: qrData, width: 200, height: 200 });
+    document.getElementById('mainPage').classList.remove('active');
+    document.getElementById('qrPage').classList.add('active');
+  }
+
+  function backToAlbum() {
+    document.getElementById('qrPage').classList.remove('active');
+    document.getElementById('mainPage').classList.add('active');
+  }
+
   document.getElementById('albumBtn').onclick = () => setView('album');
   document.getElementById('missingBtn').onclick = () => setView('missing');
   document.getElementById('duplicatesBtn').onclick = () => setView('duplicates');
+  document.getElementById('qrBtn').onclick = showQRPage;
+  document.getElementById('backToAlbumBtn').onclick = backToAlbum;
   document.getElementById('searchTeam').addEventListener('input', filterTeams);
 
   renderAll();
