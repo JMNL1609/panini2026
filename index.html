@@ -81,6 +81,13 @@
       z-index: 0;
     }
 
+    /* Contenedor principal para simetría */
+    .app-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
     .hero {
       position: relative;
       background: linear-gradient(135deg, #04112e 0%, #071a3a 100%);
@@ -227,7 +234,7 @@
     .action-bar {
       padding: var(--space-sm) var(--space-md);
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
       gap: var(--space-sm);
       align-items: center;
       background: rgba(6, 14, 28, 0.8);
@@ -289,7 +296,15 @@
       color: var(--gold);
     }
 
-    /* NUEVO: Grid de banderas en 10 filas x 5 columnas */
+    /* Botón PDF solo visible cuando corresponde */
+    .btn-pdf {
+      display: none;
+    }
+    .btn-pdf.visible {
+      display: inline-flex;
+    }
+
+    /* Grid de banderas en 10 filas x 5 columnas */
     .flags-grid {
       padding: var(--space-md);
       background: rgba(10, 20, 40, 0.7);
@@ -689,20 +704,18 @@
     @media (min-width: 900px) {
       .teams-grid {
         grid-template-columns: repeat(3, 1fr);
-        max-width: 1400px;
       }
     }
 
     @media (min-width: 1200px) {
       .teams-grid {
         grid-template-columns: repeat(4, 1fr);
-        max-width: 1600px;
       }
     }
   </style>
 </head>
 <body>
-
+<div class="app-container">
 <div id="mainPage" class="page active">
   <div class="hero" id="topPage">
     <div class="trophy-icon">🏆✨⚽</div>
@@ -736,7 +749,6 @@
     <button class="btn" id="missingBtn">🔍 Me faltan</button>
     <button class="btn" id="duplicatesBtn">🔄 Repetidas</button>
     <button class="btn" id="qrBtn">📱 QR</button>
-    <button class="btn" id="pdfBtn">📄 Exportar PDF</button>
   </div>
 
   <div class="flags-grid" id="flagsGridContainer"></div>
@@ -761,6 +773,7 @@
 </div>
 
 <div id="toastMsg" class="toast-notify"></div>
+</div>
 
 <script>
   const SECTIONS = [
@@ -822,6 +835,7 @@
   let lastTapTime = 0;
   const DOUBLE_TAP_DELAY = 300;
   let tapTimer = null;
+  let currentSearchTerm = ''; // Guardar término de búsqueda actual
 
   try {
     const saved = localStorage.getItem('panini2026_app');
@@ -845,9 +859,9 @@
     SECTIONS.forEach(sec => {
       for(let i=1; i<=sec.n; i++) {
         const sid = `${sec.code}${i}`;
-        if (!ownedState[sid] || ownedState[sid] === 0) missing.push({ id: sid, code: sec.code, flag: sec.flag });
+        if (!ownedState[sid] || ownedState[sid] === 0) missing.push(sid);
       }
-      if(sec.code === 'FWC' && (!ownedState['FWC00'] || ownedState['FWC00'] === 0)) missing.push({ id: 'FWC00', code: 'FWC', flag: '🏆' });
+      if(sec.code === 'FWC' && (!ownedState['FWC00'] || ownedState['FWC00'] === 0)) missing.push('FWC00');
     });
     return missing;
   }
@@ -858,11 +872,11 @@
       for(let i=1; i<=sec.n; i++) {
         const sid = `${sec.code}${i}`;
         if (ownedState[sid] && ownedState[sid] >= 2) {
-          for(let j=1; j <= (ownedState[sid] - 1); j++) duplicates.push({ id: sid, code: sec.code, flag: sec.flag });
+          for(let j=1; j <= (ownedState[sid] - 1); j++) duplicates.push(sid);
         }
       }
       if(sec.code === 'FWC' && ownedState['FWC00'] && ownedState['FWC00'] >= 2) {
-        for(let j=1; j <= (ownedState['FWC00'] - 1); j++) duplicates.push({ id: 'FWC00', code: 'FWC', flag: '🏆' });
+        for(let j=1; j <= (ownedState['FWC00'] - 1); j++) duplicates.push('FWC00');
       }
     });
     return duplicates;
@@ -914,9 +928,11 @@
       
       // Agrupar por código de país
       const grouped = {};
-      list.forEach(item => {
-        if (!grouped[item.code]) grouped[item.code] = { flag: item.flag, code: item.code, stickers: [] };
-        grouped[item.code].stickers.push(item.id);
+      list.forEach(stickerId => {
+        const code = stickerId.replace(/\d+$/, '');
+        const sec = SECTIONS.find(s => s.code === code);
+        if (!grouped[code]) grouped[code] = { flag: sec ? sec.flag : '🏆', code: code, stickers: [] };
+        grouped[code].stickers.push(stickerId);
       });
       
       let yPos = 55;
@@ -928,35 +944,35 @@
         
         if (yPos > maxY - 10) { doc.addPage(); yPos = 20; }
         
-        // Línea: Bandera + Código + stickers (formato solicitado)
-        const lineStart = `${group.flag} ${group.code} `;
+        // Formato: 🇲🇽 MEX: MEX01, MEX05, MEX12...
+        const linePrefix = `${group.flag} ${group.code}: `;
         const stickersText = group.stickers.join(', ');
         
         doc.setFontSize(8);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(245, 197, 66);
-        doc.text(lineStart, margin, yPos);
+        doc.text(linePrefix, margin, yPos);
         
-        const lineStartWidth = doc.getTextWidth(lineStart);
+        const prefixWidth = doc.getTextWidth(linePrefix);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(220, 220, 220);
         
-        // Manejo de líneas largas
         let remainingText = stickersText;
-        let currentX = margin + lineStartWidth;
+        let currentX = margin + prefixWidth;
         let currentY = yPos;
         
         while (remainingText.length > 0) {
           let slice = remainingText;
           let textWidth = doc.getTextWidth(slice);
           while (textWidth > (pageWidth - margin - 5 - (currentX - margin)) && slice.length > 0) {
-            slice = slice.substring(0, slice.lastIndexOf(','));
-            if (slice === '') break;
+            const lastComma = slice.lastIndexOf(',');
+            if (lastComma === -1) break;
+            slice = slice.substring(0, lastComma);
             textWidth = doc.getTextWidth(slice);
           }
-          if (slice === '') {
-            slice = remainingText.substring(0, 30);
-            textWidth = doc.getTextWidth(slice);
+          if (slice === '' || slice === remainingText) {
+            const maxChars = Math.floor((pageWidth - margin - 10) / (doc.getTextWidth('W') * 0.6));
+            slice = remainingText.substring(0, maxChars);
           }
           doc.text(slice, currentX, currentY);
           remainingText = remainingText.substring(slice.length);
@@ -966,6 +982,7 @@
           if (currentY > maxY - 8) {
             doc.addPage();
             currentY = 20;
+            currentX = margin + 2;
           }
         }
         
@@ -1008,6 +1025,11 @@
         applyCurrentView(cardDiv, sec, collected);
       }
     });
+    
+    // Re-aplicar filtro de búsqueda después de actualizar (para mantener consistencia)
+    if (currentSearchTerm !== '') {
+      applySearchFilter(currentSearchTerm);
+    }
   }
   
   function applyCurrentView(cardDiv, sec, collected) {
@@ -1185,12 +1207,11 @@
     updateGlobalStats();
   }
 
-  function filterTeams() {
-    const q = document.getElementById('searchTeam').value.toLowerCase().trim();
+  function applySearchFilter(q) {
+    q = q.toLowerCase().trim();
     let firstVisible = null;
     document.querySelectorAll('.team-card').forEach(card => {
       const match = card.dataset.code.includes(q) || card.dataset.name.includes(q);
-      const wasHidden = card.classList.contains('hidden');
       if (q !== "" && !match) {
         card.classList.add('hidden');
       } else if (q !== "" && match) {
@@ -1200,7 +1221,13 @@
         card.classList.remove('hidden');
       }
     });
-    if (firstVisible && q !== "") {
+    return firstVisible;
+  }
+
+  function filterTeams() {
+    currentSearchTerm = document.getElementById('searchTeam').value;
+    const firstVisible = applySearchFilter(currentSearchTerm);
+    if (firstVisible && currentSearchTerm !== "") {
       setTimeout(() => {
         firstVisible.scrollIntoView({ behavior: 'smooth', block: 'center' });
         firstVisible.style.boxShadow = '0 0 20px rgba(245,197,66,0.6)';
@@ -1223,13 +1250,32 @@
     document.getElementById('albumBtn').classList.toggle('active-view', view === 'album');
     document.getElementById('missingBtn').classList.toggle('active-view', view === 'missing');
     document.getElementById('duplicatesBtn').classList.toggle('active-view', view === 'duplicates');
+    
+    // Mostrar botón PDF solo en vistas 'missing' o 'duplicates'
+    const pdfBtn = document.getElementById('pdfBtn');
+    if (view === 'missing' || view === 'duplicates') {
+      if (!pdfBtn) {
+        const actionBar = document.querySelector('.action-bar');
+        const newBtn = document.createElement('button');
+        newBtn.className = 'btn btn-pdf visible';
+        newBtn.id = 'pdfBtn';
+        newBtn.innerHTML = '📄 Exportar PDF';
+        newBtn.onclick = generatePDF;
+        actionBar.appendChild(newBtn);
+      } else {
+        pdfBtn.classList.add('visible');
+      }
+    } else {
+      if (pdfBtn) pdfBtn.classList.remove('visible');
+    }
+    
     updateGlobalStats();
     showToast(view === 'album' ? '📒 Vista Álbum' : view === 'missing' ? '🔍 Mostrando faltantes' : '🔄 Mostrando repetidas', 1500);
   }
 
   function showQRPage() {
     const duplicates = getDuplicatesList();
-    const qrData = JSON.stringify({ stickers: duplicates.map(d => d.id), total: duplicates.length, timestamp: Date.now() });
+    const qrData = JSON.stringify({ stickers: duplicates, total: duplicates.length, timestamp: Date.now() });
     document.getElementById('qrDataText').innerHTML = `<strong>📦 ${duplicates.length} stickers repetidos</strong><br><small>${qrData.substring(0, 100)}${qrData.length > 100 ? '...' : ''}</small>`;
     document.getElementById('qrcode').innerHTML = '';
     new QRCode(document.getElementById('qrcode'), { text: qrData, width: 200, height: 200 });
@@ -1247,7 +1293,6 @@
   document.getElementById('duplicatesBtn').onclick = () => setView('duplicates');
   document.getElementById('qrBtn').onclick = showQRPage;
   document.getElementById('backToAlbumBtn').onclick = backToAlbum;
-  document.getElementById('pdfBtn').onclick = generatePDF;
   document.getElementById('searchTeam').addEventListener('input', filterTeams);
   document.getElementById('searchTeam').addEventListener('change', filterTeams);
 
