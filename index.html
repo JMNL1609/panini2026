@@ -289,14 +289,16 @@
       color: var(--gold);
     }
 
+    /* NUEVO: Grid de banderas en 10 filas x 5 columnas */
     .flags-grid {
       padding: var(--space-md);
       background: rgba(10, 20, 40, 0.7);
       backdrop-filter: blur(8px);
       border-bottom: 1px solid rgba(245,197,66,0.2);
       display: grid;
-      grid-template-columns: repeat(10, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: var(--space-xs);
+      width: 100%;
     }
 
     .flag-btn-grid {
@@ -382,6 +384,7 @@
       color: var(--text-muted);
     }
 
+    /* Contador sin función de clic - solo visual */
     .team-stats {
       display: flex;
       align-items: center;
@@ -389,15 +392,11 @@
       font-size: 0.65rem;
       font-weight: 700;
       flex-shrink: 0;
-      cursor: pointer;
-      pointer-events: auto;
       padding: 4px 8px;
       border-radius: 12px;
-      transition: background 0.2s;
-    }
-
-    .team-stats:active {
-      background: rgba(245,197,66,0.2);
+      background: rgba(0,0,0,0.3);
+      cursor: default;
+      pointer-events: none;
     }
 
     .team-progress-bar {
@@ -682,6 +681,9 @@
         height: 40px;
         font-size: 0.65rem;
       }
+      .flags-grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
     }
 
     @media (min-width: 900px) {
@@ -899,12 +901,12 @@
       doc.setLineWidth(1);
       doc.line(0, 30, pageWidth, 30);
       doc.setTextColor(245, 197, 66);
-      doc.setFontSize(20);
+      doc.setFontSize(18);
       doc.setFont('helvetica', 'bold');
       doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 12, { align: 'center' });
       doc.setTextColor(200, 200, 200);
       doc.setFontSize(8);
-      doc.text(title, pageWidth / 2, 20, { align: 'center' });
+      doc.text(title, pageWidth / 2, 19, { align: 'center' });
       doc.setTextColor(100, 100, 100);
       doc.setFontSize(7);
       doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX')}`, margin, 38);
@@ -926,11 +928,11 @@
         
         if (yPos > maxY - 10) { doc.addPage(); yPos = 20; }
         
-        // Línea: Bandera + Código + stickers
+        // Línea: Bandera + Código + stickers (formato solicitado)
         const lineStart = `${group.flag} ${group.code} `;
         const stickersText = group.stickers.join(', ');
         
-        doc.setFontSize(9);
+        doc.setFontSize(8);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(245, 197, 66);
         doc.text(lineStart, margin, yPos);
@@ -938,9 +940,36 @@
         const lineStartWidth = doc.getTextWidth(lineStart);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(220, 220, 220);
-        doc.text(stickersText, margin + lineStartWidth, yPos);
         
-        yPos += 6;
+        // Manejo de líneas largas
+        let remainingText = stickersText;
+        let currentX = margin + lineStartWidth;
+        let currentY = yPos;
+        
+        while (remainingText.length > 0) {
+          let slice = remainingText;
+          let textWidth = doc.getTextWidth(slice);
+          while (textWidth > (pageWidth - margin - 5 - (currentX - margin)) && slice.length > 0) {
+            slice = slice.substring(0, slice.lastIndexOf(','));
+            if (slice === '') break;
+            textWidth = doc.getTextWidth(slice);
+          }
+          if (slice === '') {
+            slice = remainingText.substring(0, 30);
+            textWidth = doc.getTextWidth(slice);
+          }
+          doc.text(slice, currentX, currentY);
+          remainingText = remainingText.substring(slice.length);
+          if (remainingText.startsWith(', ')) remainingText = remainingText.substring(2);
+          currentY += 4.5;
+          currentX = margin + 2;
+          if (currentY > maxY - 8) {
+            doc.addPage();
+            currentY = 20;
+          }
+        }
+        
+        yPos = currentY + 3;
       }
       
       const fileName = `Panini2026_${currentView === 'missing' ? 'Faltantes' : 'Repetidas'}_${new Date().toISOString().split('T')[0]}.pdf`;
@@ -970,8 +999,10 @@
       for(let i=1; i<=sec.n; i++) if(ownedState[`${sec.code}${i}`] >= 1) collected++;
       if(sec.code === 'FWC' && ownedState['FWC00'] >= 1) collected++;
       const pbFill = document.getElementById(`pb-${sec.code}`);
+      const pnSpan = document.getElementById(`pn-${sec.code}`);
       const cardDiv = document.getElementById(`card-${sec.code}`);
       if(pbFill) pbFill.style.width = `${(collected/sec.n)*100}%`;
+      if(pnSpan) pnSpan.innerText = `${collected}/${sec.n}`;
       if(cardDiv) {
         cardDiv.classList.toggle('complete', collected === sec.n);
         applyCurrentView(cardDiv, sec, collected);
@@ -1058,28 +1089,6 @@
     }
   }
 
-  function handleTeamStatsClick(secCode) {
-    const card = document.getElementById(`card-${secCode}`);
-    if (!card) return;
-    const stickers = card.querySelectorAll('.sticker');
-    let any = false;
-    stickers.forEach(sticker => {
-      const sid = sticker.getAttribute('data-sticker-id');
-      if (!ownedState[sid] || ownedState[sid] < 1) {
-        ownedState[sid] = 1;
-        any = true;
-      }
-    });
-    if (any) {
-      persist();
-      stickers.forEach(sticker => updateStickerAppearance(sticker, sticker.getAttribute('data-sticker-id')));
-      updateGlobalStats();
-      showToast(`✅ Todos los stickers de ${secCode} marcados`, 1500);
-    } else {
-      showToast(`✅ ${secCode} ya está completo`, 1500);
-    }
-  }
-
   function updateStickerUI(stickerId) {
     const el = document.querySelector(`.sticker[data-sticker-id="${stickerId}"]`);
     if(el) {
@@ -1137,7 +1146,6 @@
       const header = document.createElement('div');
       header.className = 'team-header';
       header.innerHTML = `<span class="team-flag">${sec.flag}</span><span class="team-code">${sec.code}</span><span class="team-name">${sec.name}</span><div class="team-stats"><span id="pn-${sec.code}" style="font-weight:600;">0/${sec.n}</span><div class="team-progress-bar"><div class="team-progress-fill" id="pb-${sec.code}" style="width:0%"></div></div><span class="complete-tag">✓ COMPLETO</span></div>`;
-      header.querySelector('.team-stats').onclick = (e) => { e.stopPropagation(); handleTeamStatsClick(sec.code); };
       card.appendChild(header);
       
       const grid = document.createElement('div');
@@ -1179,16 +1187,26 @@
 
   function filterTeams() {
     const q = document.getElementById('searchTeam').value.toLowerCase().trim();
+    let firstVisible = null;
     document.querySelectorAll('.team-card').forEach(card => {
       const match = card.dataset.code.includes(q) || card.dataset.name.includes(q);
-      card.classList.toggle('hidden', q !== "" && !match);
-      if(!match && q !== "") {
-        const cardDiv = card;
-        if(cardDiv && !cardDiv.classList.contains('hidden')) {
-          cardDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+      const wasHidden = card.classList.contains('hidden');
+      if (q !== "" && !match) {
+        card.classList.add('hidden');
+      } else if (q !== "" && match) {
+        card.classList.remove('hidden');
+        if (!firstVisible) firstVisible = card;
+      } else {
+        card.classList.remove('hidden');
       }
     });
+    if (firstVisible && q !== "") {
+      setTimeout(() => {
+        firstVisible.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstVisible.style.boxShadow = '0 0 20px rgba(245,197,66,0.6)';
+        setTimeout(() => firstVisible.style.boxShadow = '', 1500);
+      }, 100);
+    }
   }
 
   let toastTimeout;
