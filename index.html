@@ -233,7 +233,7 @@
       transition: width 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
     }
 
-    /* NUEVA ESTRUCTURA: Buscador en línea 1, botones en línea 2 */
+    /* Buscador en línea 1 */
     .search-bar {
       padding: var(--space-sm) var(--space-md);
       background: rgba(6, 14, 28, 0.8);
@@ -268,12 +268,13 @@
       font-size: 0.75rem;
     }
 
+    /* Botones en línea 2 - mismos márgenes que el buscador */
     .action-bar {
       padding: var(--space-sm) var(--space-md);
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      display: flex;
       gap: var(--space-sm);
       align-items: center;
+      justify-content: center;
       background: rgba(6, 14, 28, 0.8);
       backdrop-filter: blur(8px);
       border-bottom: 1px solid rgba(245,197,66,0.2);
@@ -298,6 +299,8 @@
       backdrop-filter: blur(4px);
       min-height: var(--touch-min);
       white-space: nowrap;
+      flex: 1;
+      text-align: center;
     }
 
     .btn:active { transform: scale(0.96); background: rgba(245,197,66,0.2);}
@@ -760,7 +763,7 @@
     </div>
   </div>
 
-  <!-- Botones en línea 2 -->
+  <!-- Botones en línea 2 - mismo ancho que el buscador -->
   <div class="action-bar">
     <button class="btn active-view" id="albumBtn">📒 Álbum</button>
     <button class="btn" id="missingBtn">🔍 Me faltan</button>
@@ -947,7 +950,6 @@
       const grouped = {};
       list.forEach(stickerId => {
         const code = stickerId.replace(/\d+$/, '');
-        const sec = SECTIONS.find(s => s.code === code);
         if (!grouped[code]) grouped[code] = { code: code, stickers: [] };
         grouped[code].stickers.push(stickerId);
       });
@@ -982,9 +984,8 @@
           doc.text(title, pageWidth / 2, 14, { align: 'center' });
         }
         
-        // Formato: [FWC] FWC: FWC01, FWC05, FWC12...
-        // Usamos corchetes en lugar de emojis para garantizar compatibilidad
-        const linePrefix = `[${group.code}] ${group.code}: `;
+        // Formato: [MEX] MEX01, MEX02, MEX03... (todo en la misma línea)
+        const linePrefix = `[${group.code}] `;
         const stickersText = group.stickers.join(', ');
         
         doc.setFontSize(6);
