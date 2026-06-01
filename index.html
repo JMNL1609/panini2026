@@ -956,49 +956,49 @@
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 15;
       
-      // Función para dibujar encabezado completo
+      // Función para dibujar encabezado completo (página 1)
       function drawFullHeader() {
         doc.setFillColor(4, 18, 46);
-        doc.rect(0, 0, pageWidth, 35, 'F');
+        doc.rect(0, 0, pageWidth, 38, 'F');
         doc.setDrawColor(245, 197, 66);
         doc.setLineWidth(1);
-        doc.line(0, 35, pageWidth, 35);
+        doc.line(0, 38, pageWidth, 38);
         doc.setTextColor(245, 197, 66);
         doc.setFontSize(18);
         doc.setFont('helvetica', 'bold');
         doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 12, { align: 'center' });
         doc.setTextColor(200, 200, 200);
         doc.setFontSize(8);
-        doc.text(title, pageWidth / 2, 19, { align: 'center' });
+        doc.text(title, pageWidth / 2, 20, { align: 'center' });
         doc.setTextColor(245, 197, 66);
-        doc.setFontSize(7);
-        doc.text('SEBASTIÁN NAVARRO', pageWidth / 2, 26, { align: 'center' });
+        doc.setFontSize(8);
+        doc.text('SEBASTIÁN NAVARRO', pageWidth / 2, 28, { align: 'center' });
         doc.setTextColor(100, 100, 100);
         doc.setFontSize(7);
-        doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX')}`, margin, 42);
-        doc.text(`Total: ${list.length} cromos`, margin, 47);
+        doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX')}`, margin, 45);
+        doc.text(`Total: ${list.length} cromos`, margin, 50);
       }
       
-      // Función para dibujar encabezado compacto en páginas nuevas
+      // Función para dibujar encabezado compacto (páginas 2+)
       function drawCompactHeader() {
         doc.setFillColor(4, 18, 46);
-        doc.rect(0, 0, pageWidth, 30, 'F');
+        doc.rect(0, 0, pageWidth, 32, 'F');
         doc.setDrawColor(245, 197, 66);
-        doc.line(0, 30, pageWidth, 30);
+        doc.line(0, 32, pageWidth, 32);
         doc.setTextColor(245, 197, 66);
         doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
         doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 10, { align: 'center' });
         doc.setTextColor(200, 200, 200);
         doc.setFontSize(7);
-        doc.text(title, pageWidth / 2, 16, { align: 'center' });
+        doc.text(title, pageWidth / 2, 17, { align: 'center' });
         doc.setTextColor(245, 197, 66);
-        doc.setFontSize(6);
-        doc.text('SEBASTIÁN NAVARRO', pageWidth / 2, 22, { align: 'center' });
+        doc.setFontSize(7);
+        doc.text('SEBASTIÁN NAVARRO', pageWidth / 2, 24, { align: 'center' });
         doc.setTextColor(100, 100, 100);
         doc.setFontSize(6);
-        doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX')}`, margin, 37);
-        doc.text(`Total: ${list.length} cromos`, margin, 42);
+        doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX')}`, margin, 39);
+        doc.text(`Total: ${list.length} cromos`, margin, 44);
       }
       
       // Dibujar encabezado en primera página
@@ -1013,7 +1013,7 @@
         grouped[code].stickers.push(stickerId);
       });
       
-      let yPos = 56;
+      let yPos = 58;
       const maxY = pageHeight - 20;
       
       for (let code in grouped) {
@@ -1029,10 +1029,10 @@
           doc.addPage();
           yPos = 20;
           drawCompactHeader();
-          yPos = 50;
+          yPos = 52;
         }
         
-        // Formato completo en UNA SOLA LÍNEA: 🇲🇽 MEX: MEX01, MEX02...
+        // FORMATO: 🇲🇽 MEX: MEX01, MEX02, MEX03...
         const fullLine = `${group.flag} ${group.code}: ${group.stickers.join(', ')}`;
         
         doc.setFontSize(7);
@@ -1086,11 +1086,11 @@
             currentX = margin;
             isFirstLine = true;
             drawCompactHeader();
-            currentY = 50;
+            currentY = 52;
           }
         }
         
-        yPos = currentY + 1; // Una línea de separación entre países
+        yPos = currentY + 2; // Una línea de separación entre países
       }
       
       const fileName = `Panini2026_${currentView === 'missing' ? 'Faltantes' : 'Repetidas'}_${new Date().toISOString().split('T')[0]}.pdf`;
