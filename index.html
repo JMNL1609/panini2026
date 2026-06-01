@@ -955,6 +955,7 @@
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 15;
+      const indent = 8; // Sangría para los stickers
       
       // Función para dibujar encabezado completo (página 1)
       function drawFullHeader() {
@@ -1025,57 +1026,49 @@
         });
         
         // Verificar espacio en página
-        if (yPos > maxY - 15) {
+        if (yPos > maxY - 20) {
           doc.addPage();
           yPos = 20;
           drawCompactHeader();
           yPos = 52;
         }
         
-        // FORMATO: 🇲🇽 MEX: MEX01, MEX02, MEX03...
-        const fullLine = `${group.flag} ${group.code}: ${group.stickers.join(', ')}`;
-        
-        doc.setFontSize(7);
+        // LÍNEA 1: 🇲🇽 MEX:
+        doc.setFontSize(8);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
+        doc.text(`${group.flag} ${group.code}:`, margin, yPos);
+        yPos += 5;
         
-        let remainingText = fullLine;
-        let currentX = margin;
+        // LÍNEA 2: stickers con sangría
+        const stickersText = group.stickers.join(', ');
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'normal');
+        
+        let remainingText = stickersText;
         let currentY = yPos;
-        let isFirstLine = true;
         
         while (remainingText.length > 0) {
           let slice = remainingText;
           let textWidth = doc.getTextWidth(slice);
-          const maxWidth = pageWidth - margin - 5;
+          const maxWidth = pageWidth - margin - indent - 5;
           
           while (textWidth > maxWidth && slice.length > 0) {
-            const lastSpace = slice.lastIndexOf(' ');
             const lastComma = slice.lastIndexOf(',');
-            const breakPoint = Math.max(lastSpace, lastComma);
-            if (breakPoint > 0 && breakPoint < slice.length - 1) {
-              slice = slice.substring(0, breakPoint);
-            } else {
+            if (lastComma === -1) {
               const maxChars = Math.floor(maxWidth / 3.5);
               slice = slice.substring(0, Math.max(1, maxChars));
               break;
             }
+            slice = slice.substring(0, lastComma);
             textWidth = doc.getTextWidth(slice);
           }
           
           if (slice.length > 0) {
-            if (!isFirstLine) {
-              doc.text(slice, margin + 5, currentY);
-            } else {
-              doc.text(slice, currentX, currentY);
-            }
+            doc.text(slice, margin + indent, currentY);
             remainingText = remainingText.substring(slice.length);
-            if (remainingText.startsWith(' ')) remainingText = remainingText.substring(1);
-            if (remainingText.startsWith(',')) remainingText = remainingText.substring(1);
-            if (remainingText.startsWith(' ')) remainingText = remainingText.substring(1);
+            if (remainingText.startsWith(', ')) remainingText = remainingText.substring(2);
             currentY += 4;
-            currentX = margin;
-            isFirstLine = false;
           } else {
             break;
           }
@@ -1083,14 +1076,12 @@
           if (currentY > maxY - 10) {
             doc.addPage();
             currentY = 20;
-            currentX = margin;
-            isFirstLine = true;
             drawCompactHeader();
             currentY = 52;
           }
         }
         
-        yPos = currentY + 2; // Una línea de separación entre países
+        yPos = currentY + 3; // Una línea de separación entre países
       }
       
       const fileName = `Panini2026_${currentView === 'missing' ? 'Faltantes' : 'Repetidas'}_${new Date().toISOString().split('T')[0]}.pdf`;
