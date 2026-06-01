@@ -956,8 +956,8 @@
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 15;
       
-      // Función para dibujar encabezado en todas las páginas
-      function drawHeader(yPosHeader) {
+      // Función para dibujar encabezado completo
+      function drawFullHeader() {
         doc.setFillColor(4, 18, 46);
         doc.rect(0, 0, pageWidth, 35, 'F');
         doc.setDrawColor(245, 197, 66);
@@ -979,8 +979,30 @@
         doc.text(`Total: ${list.length} cromos`, margin, 47);
       }
       
+      // Función para dibujar encabezado compacto en páginas nuevas
+      function drawCompactHeader() {
+        doc.setFillColor(4, 18, 46);
+        doc.rect(0, 0, pageWidth, 30, 'F');
+        doc.setDrawColor(245, 197, 66);
+        doc.line(0, 30, pageWidth, 30);
+        doc.setTextColor(245, 197, 66);
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 10, { align: 'center' });
+        doc.setTextColor(200, 200, 200);
+        doc.setFontSize(7);
+        doc.text(title, pageWidth / 2, 16, { align: 'center' });
+        doc.setTextColor(245, 197, 66);
+        doc.setFontSize(6);
+        doc.text('SEBASTIÁN NAVARRO', pageWidth / 2, 22, { align: 'center' });
+        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(6);
+        doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX')}`, margin, 37);
+        doc.text(`Total: ${list.length} cromos`, margin, 42);
+      }
+      
       // Dibujar encabezado en primera página
-      drawHeader();
+      drawFullHeader();
       
       // Agrupar por código de país
       const grouped = {};
@@ -991,7 +1013,7 @@
         grouped[code].stickers.push(stickerId);
       });
       
-      let yPos = 56; // Posición inicial después del encabezado
+      let yPos = 56;
       const maxY = pageHeight - 20;
       
       for (let code in grouped) {
@@ -1002,43 +1024,25 @@
           return numA - numB;
         });
         
-        // Verificar si necesitamos nueva página
-        if (yPos > maxY - 10) {
+        // Verificar espacio en página
+        if (yPos > maxY - 15) {
           doc.addPage();
           yPos = 20;
-          // Redibujar encabezado en nueva página
-          doc.setFillColor(4, 18, 46);
-          doc.rect(0, 0, pageWidth, 30, 'F');
-          doc.setDrawColor(245, 197, 66);
-          doc.line(0, 30, pageWidth, 30);
-          doc.setTextColor(245, 197, 66);
-          doc.setFontSize(14);
-          doc.setFont('helvetica', 'bold');
-          doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 10, { align: 'center' });
-          doc.setTextColor(200, 200, 200);
-          doc.setFontSize(7);
-          doc.text(title, pageWidth / 2, 16, { align: 'center' });
-          doc.setTextColor(245, 197, 66);
-          doc.setFontSize(6);
-          doc.text('SEBASTIÁN NAVARRO', pageWidth / 2, 22, { align: 'center' });
-          doc.setTextColor(100, 100, 100);
-          doc.setFontSize(6);
-          doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX')}`, margin, 36);
-          doc.text(`Total: ${list.length} cromos`, margin, 41);
+          drawCompactHeader();
           yPos = 50;
         }
         
-        // Formato: 🇲🇽 MEX: MEX01, MEX02, MEX03...
-        const lineText = `${group.flag} ${group.code}: ${group.stickers.join(', ')}`;
+        // Formato completo en UNA SOLA LÍNEA: 🇲🇽 MEX: MEX01, MEX02...
+        const fullLine = `${group.flag} ${group.code}: ${group.stickers.join(', ')}`;
         
         doc.setFontSize(7);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
         
-        // Manejo de líneas largas - dividir si es necesario
-        let remainingText = lineText;
+        let remainingText = fullLine;
         let currentX = margin;
         let currentY = yPos;
+        let isFirstLine = true;
         
         while (remainingText.length > 0) {
           let slice = remainingText;
@@ -1046,53 +1050,47 @@
           const maxWidth = pageWidth - margin - 5;
           
           while (textWidth > maxWidth && slice.length > 0) {
+            const lastSpace = slice.lastIndexOf(' ');
             const lastComma = slice.lastIndexOf(',');
-            if (lastComma === -1) {
+            const breakPoint = Math.max(lastSpace, lastComma);
+            if (breakPoint > 0 && breakPoint < slice.length - 1) {
+              slice = slice.substring(0, breakPoint);
+            } else {
               const maxChars = Math.floor(maxWidth / 3.5);
               slice = slice.substring(0, Math.max(1, maxChars));
               break;
             }
-            slice = slice.substring(0, lastComma);
             textWidth = doc.getTextWidth(slice);
           }
           
           if (slice.length > 0) {
-            doc.text(slice, currentX, currentY);
+            if (!isFirstLine) {
+              doc.text(slice, margin + 5, currentY);
+            } else {
+              doc.text(slice, currentX, currentY);
+            }
             remainingText = remainingText.substring(slice.length);
-            if (remainingText.startsWith(', ')) remainingText = remainingText.substring(2);
+            if (remainingText.startsWith(' ')) remainingText = remainingText.substring(1);
+            if (remainingText.startsWith(',')) remainingText = remainingText.substring(1);
+            if (remainingText.startsWith(' ')) remainingText = remainingText.substring(1);
             currentY += 4;
             currentX = margin;
+            isFirstLine = false;
           } else {
             break;
           }
           
-          if (currentY > maxY - 8) {
+          if (currentY > maxY - 10) {
             doc.addPage();
             currentY = 20;
             currentX = margin;
-            // Redibujar encabezado en nueva página
-            doc.setFillColor(4, 18, 46);
-            doc.rect(0, 0, pageWidth, 30, 'F');
-            doc.setDrawColor(245, 197, 66);
-            doc.line(0, 30, pageWidth, 30);
-            doc.setTextColor(245, 197, 66);
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 10, { align: 'center' });
-            doc.setTextColor(200, 200, 200);
-            doc.setFontSize(7);
-            doc.text(title, pageWidth / 2, 16, { align: 'center' });
-            doc.setTextColor(245, 197, 66);
-            doc.setFontSize(6);
-            doc.text('SEBASTIÁN NAVARRO', pageWidth / 2, 22, { align: 'center' });
-            doc.setTextColor(100, 100, 100);
-            doc.setFontSize(6);
-            doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX')}`, margin, 36);
-            doc.text(`Total: ${list.length} cromos`, margin, 41);
+            isFirstLine = true;
+            drawCompactHeader();
+            currentY = 50;
           }
         }
         
-        yPos = currentY + 2; // Una línea de separación entre países
+        yPos = currentY + 1; // Una línea de separación entre países
       }
       
       const fileName = `Panini2026_${currentView === 'missing' ? 'Faltantes' : 'Repetidas'}_${new Date().toISOString().split('T')[0]}.pdf`;
