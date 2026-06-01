@@ -485,14 +485,14 @@
       height: 48px;
       background: #0F172F;
       border-radius: 8px;
-      border: 1px solid #2A3A60;
+      border: 2px solid #000000;
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: 'Inter', monospace;
       font-size: 0.6rem;
       font-weight: 700;
-      color: #9AACD0;
+      color: #000000;
       cursor: pointer;
       transition: all 0.12s linear;
       backdrop-filter: blur(2px);
@@ -508,16 +508,16 @@
 
     .sticker.owned {
       background: linear-gradient(145deg, #0D3B20, #072613);
-      border-color: var(--owned-border);
-      color: #C6FFDD;
-      box-shadow: 0 0 6px rgba(42,209,138,0.3);
+      border-color: #000000;
+      color: #000000;
+      box-shadow: 0 0 6px rgba(0,0,0,0.3);
     }
 
     .sticker.duplicate {
       background: linear-gradient(145deg, #3B1A0A, #2A0E04);
-      border-color: #FF8C00;
-      color: #FFD700;
-      box-shadow: 0 0 8px rgba(255,140,0,0.4);
+      border-color: #000000;
+      color: #000000;
+      box-shadow: 0 0 8px rgba(0,0,0,0.4);
     }
 
     .duplicate-badge {
@@ -988,15 +988,13 @@
       const grouped = {};
       list.forEach(stickerId => {
         const code = stickerId.replace(/\d+$/, '');
-        if (!grouped[code]) grouped[code] = { code: code, stickers: [] };
+        const sec = SECTIONS.find(s => s.code === code);
+        if (!grouped[code]) grouped[code] = { code: code, flag: sec ? sec.flag : '🏆', stickers: [] };
         grouped[code].stickers.push(stickerId);
       });
       
       let yPos = 52;
       const maxY = pageHeight - 20;
-      
-      // Usar fuente Courier (monospace) para mejor legibilidad
-      doc.setFont('courier', 'normal');
       
       for (let code in grouped) {
         const group = grouped[code];
@@ -1016,22 +1014,24 @@
           doc.line(0, 20, pageWidth, 20);
           doc.setTextColor(245, 197, 66);
           doc.setFontSize(12);
+          doc.setFont('helvetica', 'bold');
           doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 8, { align: 'center' });
           doc.setFontSize(7);
           doc.setTextColor(200, 200, 200);
           doc.text(title, pageWidth / 2, 14, { align: 'center' });
         }
         
-        // Formato: [MEX] MEX01, MEX02, MEX03... (todo en la misma línea)
-        const linePrefix = `[${group.code}] `;
+        // Formato: 🇲🇽 MEX: MEX01, MEX02, MEX03...
+        const linePrefix = `${group.flag} ${group.code}: `;
         const stickersText = group.stickers.join(', ');
         
-        doc.setFontSize(6);
-        doc.setTextColor(245, 197, 66);
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0, 0, 0);
         doc.text(linePrefix, margin, yPos);
         
         const prefixWidth = doc.getTextWidth(linePrefix);
-        doc.setTextColor(220, 220, 220);
+        doc.setFont('helvetica', 'normal');
         
         let remainingText = stickersText;
         let currentX = margin + prefixWidth;
@@ -1044,7 +1044,7 @@
           while (textWidth > maxWidth && slice.length > 0) {
             const lastComma = slice.lastIndexOf(',');
             if (lastComma === -1) {
-              const maxChars = Math.floor(maxWidth / 2.5);
+              const maxChars = Math.floor(maxWidth / 3);
               slice = slice.substring(0, Math.max(1, maxChars));
               break;
             }
@@ -1055,7 +1055,7 @@
             doc.text(slice, currentX, currentY);
             remainingText = remainingText.substring(slice.length);
             if (remainingText.startsWith(', ')) remainingText = remainingText.substring(2);
-            currentY += 3.5;
+            currentY += 4;
             currentX = margin + 2;
           } else {
             break;
@@ -1071,6 +1071,7 @@
             doc.line(0, 20, pageWidth, 20);
             doc.setTextColor(245, 197, 66);
             doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
             doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 8, { align: 'center' });
             doc.setFontSize(7);
             doc.setTextColor(200, 200, 200);
