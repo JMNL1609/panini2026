@@ -81,6 +81,7 @@
       z-index: 0;
     }
 
+    /* Contenedor principal para simetría */
     .app-container {
       max-width: 1400px;
       margin: 0 auto;
@@ -232,6 +233,7 @@
       transition: width 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
     }
 
+    /* Buscador en línea 1 */
     .search-bar {
       padding: var(--space-sm) var(--space-md);
       background: rgba(6, 14, 28, 0.8);
@@ -266,6 +268,7 @@
       font-size: 0.75rem;
     }
 
+    /* Botones principales en línea 2 - 4 botones fijos */
     .action-bar {
       padding: var(--space-sm) var(--space-md);
       display: flex;
@@ -279,6 +282,7 @@
       flex-wrap: wrap;
     }
 
+    /* Botón PDF en línea 3 separada */
     .pdf-bar {
       padding: var(--space-sm) var(--space-md);
       background: rgba(6, 14, 28, 0.8);
@@ -328,6 +332,7 @@
       color: var(--gold);
     }
 
+    /* Grid de banderas en 10 filas x 5 columnas */
     .flags-grid {
       padding: var(--space-md);
       background: rgba(10, 20, 40, 0.7);
@@ -422,6 +427,7 @@
       color: var(--text-muted);
     }
 
+    /* Contador sin función de clic - solo visual */
     .team-stats {
       display: flex;
       align-items: center;
@@ -699,6 +705,7 @@
       display: block;
     }
 
+    /* Responsive para móvil */
     @media (max-width: 600px) {
       .action-bar {
         gap: var(--space-xs);
@@ -781,6 +788,7 @@
     </div>
   </div>
 
+  <!-- Buscador en línea 1 -->
   <div class="search-bar">
     <div class="search-field">
       <span>🔍</span>
@@ -788,6 +796,7 @@
     </div>
   </div>
 
+  <!-- Botones principales en línea 2 - SIEMPRE VISIBLES -->
   <div class="action-bar">
     <button class="btn active-view" id="albumBtn">📒 Álbum</button>
     <button class="btn" id="missingBtn">🔍 Me faltan</button>
@@ -795,6 +804,7 @@
     <button class="btn" id="qrBtn">📱 QR</button>
   </div>
 
+  <!-- Botón PDF en línea 3 - solo visible cuando corresponde -->
   <div class="pdf-bar" id="pdfBar">
     <button class="btn btn-pdf" id="pdfBtn">📄 Exportar PDF</button>
   </div>
@@ -955,55 +965,24 @@
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 15;
-      const indent = 8; // Sangría para los stickers
       
-      // Función para dibujar encabezado completo (página 1)
-      function drawFullHeader() {
-        doc.setFillColor(4, 18, 46);
-        doc.rect(0, 0, pageWidth, 38, 'F');
-        doc.setDrawColor(245, 197, 66);
-        doc.setLineWidth(1);
-        doc.line(0, 38, pageWidth, 38);
-        doc.setTextColor(245, 197, 66);
-        doc.setFontSize(18);
-        doc.setFont('helvetica', 'bold');
-        doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 12, { align: 'center' });
-        doc.setTextColor(200, 200, 200);
-        doc.setFontSize(8);
-        doc.text(title, pageWidth / 2, 20, { align: 'center' });
-        doc.setTextColor(245, 197, 66);
-        doc.setFontSize(8);
-        doc.text('SEBASTIÁN NAVARRO', pageWidth / 2, 28, { align: 'center' });
-        doc.setTextColor(100, 100, 100);
-        doc.setFontSize(7);
-        doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX')}`, margin, 45);
-        doc.text(`Total: ${list.length} cromos`, margin, 50);
-      }
-      
-      // Función para dibujar encabezado compacto (páginas 2+)
-      function drawCompactHeader() {
-        doc.setFillColor(4, 18, 46);
-        doc.rect(0, 0, pageWidth, 32, 'F');
-        doc.setDrawColor(245, 197, 66);
-        doc.line(0, 32, pageWidth, 32);
-        doc.setTextColor(245, 197, 66);
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 10, { align: 'center' });
-        doc.setTextColor(200, 200, 200);
-        doc.setFontSize(7);
-        doc.text(title, pageWidth / 2, 17, { align: 'center' });
-        doc.setTextColor(245, 197, 66);
-        doc.setFontSize(7);
-        doc.text('SEBASTIÁN NAVARRO', pageWidth / 2, 24, { align: 'center' });
-        doc.setTextColor(100, 100, 100);
-        doc.setFontSize(6);
-        doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX')}`, margin, 39);
-        doc.text(`Total: ${list.length} cromos`, margin, 44);
-      }
-      
-      // Dibujar encabezado en primera página
-      drawFullHeader();
+      // Header
+      doc.setFillColor(4, 18, 46);
+      doc.rect(0, 0, pageWidth, 30, 'F');
+      doc.setDrawColor(245, 197, 66);
+      doc.setLineWidth(1);
+      doc.line(0, 30, pageWidth, 30);
+      doc.setTextColor(245, 197, 66);
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 12, { align: 'center' });
+      doc.setTextColor(200, 200, 200);
+      doc.setFontSize(8);
+      doc.text(title, pageWidth / 2, 19, { align: 'center' });
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(7);
+      doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX')}`, margin, 38);
+      doc.text(`Total: ${list.length} cromos`, margin, 43);
       
       // Agrupar por código de país
       const grouped = {};
@@ -1014,7 +993,7 @@
         grouped[code].stickers.push(stickerId);
       });
       
-      let yPos = 58;
+      let yPos = 52;
       const maxY = pageHeight - 20;
       
       for (let code in grouped) {
@@ -1025,63 +1004,82 @@
           return numA - numB;
         });
         
-        // Verificar espacio en página
-        if (yPos > maxY - 20) {
-          doc.addPage();
+        if (yPos > maxY - 8) { 
+          doc.addPage(); 
           yPos = 20;
-          drawCompactHeader();
-          yPos = 52;
+          // Reimprimir encabezado simplificado en páginas nuevas
+          doc.setFillColor(4, 18, 46);
+          doc.rect(0, 0, pageWidth, 20, 'F');
+          doc.setDrawColor(245, 197, 66);
+          doc.line(0, 20, pageWidth, 20);
+          doc.setTextColor(245, 197, 66);
+          doc.setFontSize(12);
+          doc.setFont('helvetica', 'bold');
+          doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 8, { align: 'center' });
+          doc.setFontSize(7);
+          doc.setTextColor(200, 200, 200);
+          doc.text(title, pageWidth / 2, 14, { align: 'center' });
         }
         
-        // LÍNEA 1: 🇲🇽 MEX:
-        doc.setFontSize(8);
+        // Formato: 🇲🇽 MEX: MEX01, MEX02, MEX03...
+        const linePrefix = `${group.flag} ${group.code}: `;
+        const stickersText = group.stickers.join(', ');
+        
+        doc.setFontSize(7);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
-        doc.text(`${group.flag} ${group.code}:`, margin, yPos);
-        yPos += 5;
+        doc.text(linePrefix, margin, yPos);
         
-        // LÍNEA 2: stickers con sangría
-        const stickersText = group.stickers.join(', ');
-        doc.setFontSize(7);
+        const prefixWidth = doc.getTextWidth(linePrefix);
         doc.setFont('helvetica', 'normal');
         
         let remainingText = stickersText;
+        let currentX = margin + prefixWidth;
         let currentY = yPos;
         
         while (remainingText.length > 0) {
           let slice = remainingText;
           let textWidth = doc.getTextWidth(slice);
-          const maxWidth = pageWidth - margin - indent - 5;
-          
+          const maxWidth = pageWidth - margin - 3 - currentX;
           while (textWidth > maxWidth && slice.length > 0) {
             const lastComma = slice.lastIndexOf(',');
             if (lastComma === -1) {
-              const maxChars = Math.floor(maxWidth / 3.5);
+              const maxChars = Math.floor(maxWidth / 3);
               slice = slice.substring(0, Math.max(1, maxChars));
               break;
             }
             slice = slice.substring(0, lastComma);
             textWidth = doc.getTextWidth(slice);
           }
-          
           if (slice.length > 0) {
-            doc.text(slice, margin + indent, currentY);
+            doc.text(slice, currentX, currentY);
             remainingText = remainingText.substring(slice.length);
             if (remainingText.startsWith(', ')) remainingText = remainingText.substring(2);
             currentY += 4;
+            currentX = margin + 2;
           } else {
             break;
           }
-          
-          if (currentY > maxY - 10) {
+          if (currentY > maxY - 6) {
             doc.addPage();
             currentY = 20;
-            drawCompactHeader();
-            currentY = 52;
+            currentX = margin + 2;
+            // Reimprimir encabezado
+            doc.setFillColor(4, 18, 46);
+            doc.rect(0, 0, pageWidth, 20, 'F');
+            doc.setDrawColor(245, 197, 66);
+            doc.line(0, 20, pageWidth, 20);
+            doc.setTextColor(245, 197, 66);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 8, { align: 'center' });
+            doc.setFontSize(7);
+            doc.setTextColor(200, 200, 200);
+            doc.text(title, pageWidth / 2, 14, { align: 'center' });
           }
         }
         
-        yPos = currentY + 3; // Una línea de separación entre países
+        yPos = currentY + 2;
       }
       
       const fileName = `Panini2026_${currentView === 'missing' ? 'Faltantes' : 'Repetidas'}_${new Date().toISOString().split('T')[0]}.pdf`;
@@ -1345,6 +1343,7 @@
     document.getElementById('missingBtn').classList.toggle('active-view', view === 'missing');
     document.getElementById('duplicatesBtn').classList.toggle('active-view', view === 'duplicates');
     
+    // Mostrar/ocultar barra de PDF según la vista
     const pdfBar = document.getElementById('pdfBar');
     if (view === 'missing' || view === 'duplicates') {
       pdfBar.classList.add('visible');
