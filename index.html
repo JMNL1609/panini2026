@@ -940,6 +940,48 @@
     return duplicates;
   }
 
+  // Mapa de banderas en texto para el PDF (jsPDF no soporta emojis Unicode)
+  const PDF_FLAG_TEXT = {
+    'FWC':'[FWC]','MEX':'[MEX]','RSA':'[RSA]','KOR':'[KOR]','CZE':'[CZE]',
+    'CAN':'[CAN]','BIH':'[BIH]','QAT':'[QAT]','SUI':'[SUI]','BRA':'[BRA]',
+    'MAR':'[MAR]','HAI':'[HAI]','SCO':'[SCO]','USA':'[USA]','PAR':'[PAR]',
+    'AUS':'[AUS]','TUR':'[TUR]','GER':'[GER]','CUW':'[CUW]','CIV':'[CIV]',
+    'ECU':'[ECU]','NED':'[NED]','JPN':'[JPN]','SWE':'[SWE]','TUN':'[TUN]',
+    'BEL':'[BEL]','EGY':'[EGY]','IRN':'[IRN]','NZL':'[NZL]','ESP':'[ESP]',
+    'CPV':'[CPV]','KSA':'[KSA]','URU':'[URU]','FRA':'[FRA]','SEN':'[SEN]',
+    'IRQ':'[IRQ]','NOR':'[NOR]','ARG':'[ARG]','ALG':'[ALG]','AUT':'[AUT]',
+    'JOR':'[JOR]','POR':'[POR]','COD':'[COD]','UZB':'[UZB]','COL':'[COL]',
+    'ENG':'[ENG]','CRO':'[CRO]','GHA':'[GHA]','PAN':'[PAN]','CC':'[CC]'
+  };
+
+  // Función para dibujar el encabezado completo del PDF en cualquier página
+  function _pdfDrawHeader(doc, pageWidth, title, isFirstPage, list) {
+    const headerHeight = isFirstPage ? 34 : 26;
+    doc.setFillColor(4, 18, 46);
+    doc.rect(0, 0, pageWidth, headerHeight, 'F');
+    doc.setDrawColor(245, 197, 66);
+    doc.setLineWidth(1);
+    doc.line(0, headerHeight, pageWidth, headerHeight);
+
+    doc.setTextColor(245, 197, 66);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(isFirstPage ? 18 : 13);
+    doc.text('FIFA WORLD CUP 2026', pageWidth / 2, isFirstPage ? 11 : 8, { align: 'center' });
+
+    doc.setTextColor(200, 200, 200);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(isFirstPage ? 8 : 7);
+    doc.text(title, pageWidth / 2, isFirstPage ? 18 : 15, { align: 'center' });
+
+    // Nombre del coleccionista — centrado debajo del título
+    doc.setTextColor(245, 197, 66);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(isFirstPage ? 8 : 7);
+    doc.text('SEBASTIAN NAVARRO', pageWidth / 2, isFirstPage ? 25 : 22, { align: 'center' });
+
+    return headerHeight;
+  }
+
   async function generatePDF() {
     let list = [];
     let title = '';
@@ -965,25 +1007,17 @@
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 15;
-      
-      // Header
-      doc.setFillColor(4, 18, 46);
-      doc.rect(0, 0, pageWidth, 30, 'F');
-      doc.setDrawColor(245, 197, 66);
-      doc.setLineWidth(1);
-      doc.line(0, 30, pageWidth, 30);
-      doc.setTextColor(245, 197, 66);
-      doc.setFontSize(18);
-      doc.setFont('helvetica', 'bold');
-      doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 12, { align: 'center' });
-      doc.setTextColor(200, 200, 200);
-      doc.setFontSize(8);
-      doc.text(title, pageWidth / 2, 19, { align: 'center' });
+      const maxY = pageHeight - 20;
+
+      // Encabezado página 1
+      const firstHeaderH = _pdfDrawHeader(doc, pageWidth, title, true, list);
+
       doc.setTextColor(100, 100, 100);
+      doc.setFont('courier', 'normal');
       doc.setFontSize(7);
-      doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX')}`, margin, 38);
-      doc.text(`Total: ${list.length} cromos`, margin, 43);
-      
+      doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX')}`, margin, firstHeaderH + 7);
+      doc.text(`Total: ${list.length} cromos`, margin, firstHeaderH + 12);
+
       // Agrupar por código de país
       const grouped = {};
       list.forEach(stickerId => {
@@ -991,13 +1025,12 @@
         if (!grouped[code]) grouped[code] = { code: code, stickers: [] };
         grouped[code].stickers.push(stickerId);
       });
-      
-      let yPos = 52;
-      const maxY = pageHeight - 20;
-      
+
+      let yPos = firstHeaderH + 20;
+
       // Usar fuente Courier (monospace) para mejor legibilidad
       doc.setFont('courier', 'normal');
-      
+
       for (let code in grouped) {
         const group = grouped[code];
         group.stickers.sort((a, b) => {
@@ -1005,82 +1038,66 @@
           const numB = parseInt(b.replace(/\D/g, '')) || 0;
           return numA - numB;
         });
-        
-        if (yPos > maxY - 8) { 
-          doc.addPage(); 
-          yPos = 20;
-          // Reimprimir encabezado simplificado en páginas nuevas
-          doc.setFillColor(4, 18, 46);
-          doc.rect(0, 0, pageWidth, 20, 'F');
-          doc.setDrawColor(245, 197, 66);
-          doc.line(0, 20, pageWidth, 20);
-          doc.setTextColor(245, 197, 66);
-          doc.setFontSize(12);
-          doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 8, { align: 'center' });
-          doc.setFontSize(7);
-          doc.setTextColor(200, 200, 200);
-          doc.text(title, pageWidth / 2, 14, { align: 'center' });
+
+        if (yPos > maxY - 8) {
+          doc.addPage();
+          // Encabezado completo en páginas subsiguientes
+          const contHeaderH = _pdfDrawHeader(doc, pageWidth, title, false, list);
+          yPos = contHeaderH + 8;
         }
-        
-        // Formato: [MEX] MEX01, MEX02, MEX03... (todo en la misma línea)
-        const linePrefix = `[${group.code}] `;
-        const stickersText = group.stickers.join(', ');
-        
-        doc.setFontSize(6);
+
+        // Stickers: fondo blanco, borde negro, texto negro negrita
+        const stickerW = 14;
+        const stickerH = 5.5;
+        const stickerGap = 1.5;
+        const stickersPerRow = Math.floor((pageWidth - margin * 2) / (stickerW + stickerGap));
+
+        // Encabezado de sección: prefijo de país con texto de bandera (sin emoji)
+        const flagText = PDF_FLAG_TEXT[group.code] || `[${group.code}]`;
+        const secLabel = `${flagText} ${group.code}`;
+        doc.setFontSize(7);
+        doc.setFont('courier', 'bold');
         doc.setTextColor(245, 197, 66);
-        doc.text(linePrefix, margin, yPos);
-        
-        const prefixWidth = doc.getTextWidth(linePrefix);
-        doc.setTextColor(220, 220, 220);
-        
-        let remainingText = stickersText;
-        let currentX = margin + prefixWidth;
-        let currentY = yPos;
-        
-        while (remainingText.length > 0) {
-          let slice = remainingText;
-          let textWidth = doc.getTextWidth(slice);
-          const maxWidth = pageWidth - margin - 3 - currentX;
-          while (textWidth > maxWidth && slice.length > 0) {
-            const lastComma = slice.lastIndexOf(',');
-            if (lastComma === -1) {
-              const maxChars = Math.floor(maxWidth / 2.5);
-              slice = slice.substring(0, Math.max(1, maxChars));
-              break;
+        doc.text(secLabel, margin, yPos);
+        yPos += 4;
+
+        // Dibujar los stickers en filas con estilo blanco/negro
+        let colIdx = 0;
+        let rowX = margin;
+        let rowY = yPos;
+
+        group.stickers.forEach((sid, idx) => {
+          if (colIdx > 0 && colIdx % stickersPerRow === 0) {
+            rowX = margin;
+            rowY += stickerH + stickerGap;
+            colIdx = 0;
+            if (rowY + stickerH > maxY) {
+              doc.addPage();
+              const contHeaderH = _pdfDrawHeader(doc, pageWidth, title, false, list);
+              rowY = contHeaderH + 8;
             }
-            slice = slice.substring(0, lastComma);
-            textWidth = doc.getTextWidth(slice);
           }
-          if (slice.length > 0) {
-            doc.text(slice, currentX, currentY);
-            remainingText = remainingText.substring(slice.length);
-            if (remainingText.startsWith(', ')) remainingText = remainingText.substring(2);
-            currentY += 3.5;
-            currentX = margin + 2;
-          } else {
-            break;
-          }
-          if (currentY > maxY - 6) {
-            doc.addPage();
-            currentY = 20;
-            currentX = margin + 2;
-            // Reimprimir encabezado
-            doc.setFillColor(4, 18, 46);
-            doc.rect(0, 0, pageWidth, 20, 'F');
-            doc.setDrawColor(245, 197, 66);
-            doc.line(0, 20, pageWidth, 20);
-            doc.setTextColor(245, 197, 66);
-            doc.setFontSize(12);
-            doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 8, { align: 'center' });
-            doc.setFontSize(7);
-            doc.setTextColor(200, 200, 200);
-            doc.text(title, pageWidth / 2, 14, { align: 'center' });
-          }
-        }
-        
-        yPos = currentY + 2;
+          // Fondo blanco
+          doc.setFillColor(255, 255, 255);
+          doc.setDrawColor(0, 0, 0);
+          doc.setLineWidth(0.3);
+          doc.rect(rowX + colIdx * (stickerW + stickerGap), rowY, stickerW, stickerH, 'FD');
+          // Texto negro negrita centrado
+          doc.setFont('courier', 'bold');
+          doc.setFontSize(5);
+          doc.setTextColor(0, 0, 0);
+          doc.text(
+            sid,
+            rowX + colIdx * (stickerW + stickerGap) + stickerW / 2,
+            rowY + stickerH / 2 + 1,
+            { align: 'center' }
+          );
+          colIdx++;
+        });
+
+        yPos = rowY + stickerH + 4;
       }
-      
+
       const fileName = `Panini2026_${currentView === 'missing' ? 'Faltantes' : 'Repetidas'}_${new Date().toISOString().split('T')[0]}.pdf`;
       doc.save(fileName);
       showToast(`✅ PDF generado: ${fileName}`, 2500);
