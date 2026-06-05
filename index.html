@@ -81,7 +81,6 @@
       z-index: 0;
     }
 
-    /* Contenedor principal para simetría */
     .app-container {
       max-width: 1400px;
       margin: 0 auto;
@@ -233,7 +232,6 @@
       transition: width 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
     }
 
-    /* Buscador en línea 1 */
     .search-bar {
       padding: var(--space-sm) var(--space-md);
       background: rgba(6, 14, 28, 0.8);
@@ -268,7 +266,6 @@
       font-size: 0.75rem;
     }
 
-    /* Botones principales en línea 2 - 4 botones fijos */
     .action-bar {
       padding: var(--space-sm) var(--space-md);
       display: flex;
@@ -282,7 +279,6 @@
       flex-wrap: wrap;
     }
 
-    /* Botón PDF en línea 3 separada */
     .pdf-bar {
       padding: var(--space-sm) var(--space-md);
       background: rgba(6, 14, 28, 0.8);
@@ -332,7 +328,6 @@
       color: var(--gold);
     }
 
-    /* Grid de banderas en 10 filas x 5 columnas */
     .flags-grid {
       padding: var(--space-md);
       background: rgba(10, 20, 40, 0.7);
@@ -427,7 +422,6 @@
       color: var(--text-muted);
     }
 
-    /* Contador sin función de clic - solo visual */
     .team-stats {
       display: flex;
       align-items: center;
@@ -705,7 +699,6 @@
       display: block;
     }
 
-    /* Responsive para móvil */
     @media (max-width: 600px) {
       .action-bar {
         gap: var(--space-xs);
@@ -788,7 +781,6 @@
     </div>
   </div>
 
-  <!-- Buscador en línea 1 -->
   <div class="search-bar">
     <div class="search-field">
       <span>🔍</span>
@@ -796,7 +788,6 @@
     </div>
   </div>
 
-  <!-- Botones principales en línea 2 - SIEMPRE VISIBLES -->
   <div class="action-bar">
     <button class="btn active-view" id="albumBtn">📒 Álbum</button>
     <button class="btn" id="missingBtn">🔍 Me faltan</button>
@@ -804,7 +795,6 @@
     <button class="btn" id="qrBtn">📱 QR</button>
   </div>
 
-  <!-- Botón PDF en línea 3 - solo visible cuando corresponde -->
   <div class="pdf-bar" id="pdfBar">
     <button class="btn btn-pdf" id="pdfBtn">📄 Exportar PDF</button>
   </div>
@@ -812,7 +802,7 @@
   <div class="flags-grid" id="flagsGridContainer"></div>
   <div class="teams-grid" id="teamsContainer"></div>
   <div class="world-cup-footer">
-    ⚽ 48 EQUIPOS · 988 CROMOS OFICIALES ⚽<br>
+    ⚽ 48 EQUIPOS · 1014 CROMOS OFICIALES ⚽<br>
     Toca cada sticker para coleccionar · Doble toque para deshacer
   </div>
 </div>
@@ -834,6 +824,7 @@
 </div>
 
 <script>
+  // ==================== CONFIGURACIÓN ====================
   const SECTIONS = [
     { code:'FWC', name:'FIFA World Cup', flag:'🏆', n:20 },
     { code:'MEX', name:'México', flag:'🇲🇽', n:20 },
@@ -887,7 +878,32 @@
     { code:'CC',  name:'Tarjetas Especiales', flag:'⭐', n:14 },
   ];
 
-  const TOTAL_STICKERS = SECTIONS.reduce((acc, s) => acc + s.n, 0);
+  // Mapeo de códigos a nombres de países (para PDF)
+  const COUNTRY_NAMES = {
+    'FWC': 'FIFA WORLD CUP', 'MEX': 'MÉXICO', 'RSA': 'SUDÁFRICA', 'KOR': 'COREA DEL SUR',
+    'CZE': 'REPÚBLICA CHECA', 'CAN': 'CANADÁ', 'BIH': 'BOSNIA Y HERZ.', 'QAT': 'QATAR',
+    'SUI': 'SUIZA', 'BRA': 'BRASIL', 'MAR': 'MARRUECOS', 'HAI': 'HAITÍ', 'SCO': 'ESCOCIA',
+    'USA': 'ESTADOS UNIDOS', 'PAR': 'PARAGUAY', 'AUS': 'AUSTRALIA', 'TUR': 'TÜRKIYE',
+    'GER': 'ALEMANIA', 'CUW': 'CURAZAO', 'CIV': 'COSTA DE MARFIL', 'ECU': 'ECUADOR',
+    'NED': 'PAÍSES BAJOS', 'JPN': 'JAPÓN', 'SWE': 'SUECIA', 'TUN': 'TÚNEZ', 'BEL': 'BÉLGICA',
+    'EGY': 'EGIPTO', 'IRN': 'IRÁN', 'NZL': 'NUEVA ZELANDA', 'ESP': 'ESPAÑA', 'CPV': 'CABO VERDE',
+    'KSA': 'ARABIA SAUDITA', 'URU': 'URUGUAY', 'FRA': 'FRANCIA', 'SEN': 'SENEGAL',
+    'IRQ': 'IRAK', 'NOR': 'NORUEGA', 'ARG': 'ARGENTINA', 'ALG': 'ARGELIA', 'AUT': 'AUSTRIA',
+    'JOR': 'JORDANIA', 'POR': 'PORTUGAL', 'COD': 'REP. DEM. CONGO', 'UZB': 'UZBEKISTÁN',
+    'COL': 'COLOMBIA', 'ENG': 'INGLATERRA', 'CRO': 'CROACIA', 'GHA': 'GHANA', 'PAN': 'PANAMÁ',
+    'CC': 'TARJETAS ESPECIALES'
+  };
+
+  // TOTAL CORREGIDO: 
+  // FWC: 20 stickers (FWC1 a FWC20) + sticker especial FWC00 = 21
+  // Los demás países: 49 países × 20 = 980
+  // CC: 14 stickers
+  // Total = 21 + 980 + 14 = 1015
+  // Pero según el diseño original, FWC00 es un sticker adicional dentro de la sección FWC
+  // La sección FWC tiene n=20, pero eso no incluye FWC00. Por lo tanto:
+  const EXTRA_FWC00 = 1; // Sticker adicional FWC00
+  const TOTAL_STICKERS = SECTIONS.reduce((acc, s) => acc + s.n, 0) + EXTRA_FWC00; // 1014 + 1 = 1015
+
   let ownedState = {};
   let currentView = 'album';
   let lastTapTime = 0;
@@ -895,102 +911,90 @@
   let tapTimer = null;
   let currentSearchTerm = '';
 
+  // Inicializar FWC00 en ownedState si no existe
+  if (!ownedState.hasOwnProperty('FWC00')) {
+    ownedState['FWC00'] = 0;
+  }
+
+  // Cargar datos guardados
   try {
     const saved = localStorage.getItem('panini2026_app');
-    if(saved) ownedState = JSON.parse(saved);
+    if(saved) {
+      const parsed = JSON.parse(saved);
+      ownedState = parsed;
+      if (!ownedState.hasOwnProperty('FWC00')) ownedState['FWC00'] = 0;
+    }
   } catch(e) {}
 
   function persist() {
     localStorage.setItem('panini2026_app', JSON.stringify(ownedState));
   }
 
-  function getOwnedCount() {
-    return Object.values(ownedState).filter(v => v >= 1).length;
+  // ==================== CORRECCIÓN 1: CONTADOR DE REPETIDAS ====================
+  function getDuplicateCount() {
+    // Cuenta la cantidad de stickers extras (cantidad - 1) para cada sticker con cantidad >= 2
+    let totalDuplicates = 0;
+    for (const qty of Object.values(ownedState)) {
+      if (qty >= 2) {
+        totalDuplicates += (qty - 1);
+      }
+    }
+    return totalDuplicates;
   }
 
-  function getDuplicateCount() {
-    return Object.values(ownedState).filter(v => v >= 2).length;
+  // ==================== CORRECCIÓN 2: CONTADOR DE FALTANTES (incluye FWC00) ====================
+  function getOwnedCount() {
+    // Cuenta cuántos stickers TIENE al menos 1 copia
+    let count = 0;
+    for (const qty of Object.values(ownedState)) {
+      if (qty >= 1) count++;
+    }
+    return count;
+  }
+
+  function getMissingCount() {
+    return TOTAL_STICKERS - getOwnedCount();
   }
 
   function getMissingList() {
     const missing = [];
+    // Recorrer todas las secciones
     SECTIONS.forEach(sec => {
       for(let i=1; i<=sec.n; i++) {
         const sid = `${sec.code}${i}`;
         if (!ownedState[sid] || ownedState[sid] === 0) missing.push(sid);
       }
-      if(sec.code === 'FWC' && (!ownedState['FWC00'] || ownedState['FWC00'] === 0)) missing.push('FWC00');
     });
+    // Verificar FWC00
+    if (!ownedState['FWC00'] || ownedState['FWC00'] === 0) {
+      missing.push('FWC00');
+    }
     return missing;
   }
 
   function getDuplicatesList() {
+    // Devuelve una lista donde cada sticker repetido aparece (cantidad-1) veces
     const duplicates = [];
-    SECTIONS.forEach(sec => {
-      for(let i=1; i<=sec.n; i++) {
-        const sid = `${sec.code}${i}`;
-        if (ownedState[sid] && ownedState[sid] >= 2) {
-          for(let j=1; j <= (ownedState[sid] - 1); j++) duplicates.push(sid);
+    for (const [sid, qty] of Object.entries(ownedState)) {
+      if (qty >= 2) {
+        for (let i = 0; i < (qty - 1); i++) {
+          duplicates.push(sid);
         }
       }
-      if(sec.code === 'FWC' && ownedState['FWC00'] && ownedState['FWC00'] >= 2) {
-        for(let j=1; j <= (ownedState['FWC00'] - 1); j++) duplicates.push('FWC00');
-      }
-    });
+    }
     return duplicates;
   }
 
-  // Mapa de banderas en texto para el PDF (jsPDF no soporta emojis Unicode)
-  const PDF_FLAG_TEXT = {
-    'FWC':'[FWC]','MEX':'[MEX]','RSA':'[RSA]','KOR':'[KOR]','CZE':'[CZE]',
-    'CAN':'[CAN]','BIH':'[BIH]','QAT':'[QAT]','SUI':'[SUI]','BRA':'[BRA]',
-    'MAR':'[MAR]','HAI':'[HAI]','SCO':'[SCO]','USA':'[USA]','PAR':'[PAR]',
-    'AUS':'[AUS]','TUR':'[TUR]','GER':'[GER]','CUW':'[CUW]','CIV':'[CIV]',
-    'ECU':'[ECU]','NED':'[NED]','JPN':'[JPN]','SWE':'[SWE]','TUN':'[TUN]',
-    'BEL':'[BEL]','EGY':'[EGY]','IRN':'[IRN]','NZL':'[NZL]','ESP':'[ESP]',
-    'CPV':'[CPV]','KSA':'[KSA]','URU':'[URU]','FRA':'[FRA]','SEN':'[SEN]',
-    'IRQ':'[IRQ]','NOR':'[NOR]','ARG':'[ARG]','ALG':'[ALG]','AUT':'[AUT]',
-    'JOR':'[JOR]','POR':'[POR]','COD':'[COD]','UZB':'[UZB]','COL':'[COL]',
-    'ENG':'[ENG]','CRO':'[CRO]','GHA':'[GHA]','PAN':'[PAN]','CC':'[CC]'
-  };
-
-  // Función para dibujar el encabezado completo del PDF en cualquier página
-  function _pdfDrawHeader(doc, pageWidth, title, isFirstPage, list) {
-    const headerHeight = isFirstPage ? 34 : 26;
-    doc.setFillColor(4, 18, 46);
-    doc.rect(0, 0, pageWidth, headerHeight, 'F');
-    doc.setDrawColor(245, 197, 66);
-    doc.setLineWidth(1);
-    doc.line(0, headerHeight, pageWidth, headerHeight);
-
-    doc.setTextColor(245, 197, 66);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(isFirstPage ? 18 : 13);
-    doc.text('FIFA WORLD CUP 2026', pageWidth / 2, isFirstPage ? 11 : 8, { align: 'center' });
-
-    doc.setTextColor(200, 200, 200);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(isFirstPage ? 8 : 7);
-    doc.text(title, pageWidth / 2, isFirstPage ? 18 : 15, { align: 'center' });
-
-    // Nombre del coleccionista — centrado debajo del título
-    doc.setTextColor(245, 197, 66);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(isFirstPage ? 8 : 7);
-    doc.text('SEBASTIAN NAVARRO', pageWidth / 2, isFirstPage ? 25 : 22, { align: 'center' });
-
-    return headerHeight;
-  }
-
+  // ==================== CORRECCIÓN 3: PDF CON FORMATO ESPECIAL ====================
   async function generatePDF() {
     let list = [];
     let title = '';
     if (currentView === 'missing') {
       list = getMissingList();
-      title = 'LISTA DE CROMOS FALTANTES';
+      title = 'CROMOS FALTANTES';
     } else if (currentView === 'duplicates') {
       list = getDuplicatesList();
-      title = 'LISTA DE CROMOS REPETIDOS';
+      title = 'CROMOS REPETIDOS';
     } else {
       showToast('Cambia a vista "Me faltan" o "Repetidas" para exportar PDF', 2000);
       return;
@@ -1007,97 +1011,138 @@
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 15;
-      const maxY = pageHeight - 20;
-
-      // Encabezado página 1
-      const firstHeaderH = _pdfDrawHeader(doc, pageWidth, title, true, list);
-
+      
+      // Header
+      doc.setFillColor(4, 18, 46);
+      doc.rect(0, 0, pageWidth, 30, 'F');
+      doc.setDrawColor(245, 197, 66);
+      doc.setLineWidth(1);
+      doc.line(0, 30, pageWidth, 30);
+      doc.setTextColor(245, 197, 66);
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 12, { align: 'center' });
+      doc.setTextColor(200, 200, 200);
+      doc.setFontSize(8);
+      doc.text(title, pageWidth / 2, 19, { align: 'center' });
       doc.setTextColor(100, 100, 100);
-      doc.setFont('courier', 'normal');
       doc.setFontSize(7);
-      doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX')}`, margin, firstHeaderH + 7);
-      doc.text(`Total: ${list.length} cromos`, margin, firstHeaderH + 12);
-
-      // Agrupar por código de país
+      doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX')}`, margin, 38);
+      doc.text(`Total: ${list.length} cromos`, margin, 43);
+      
+      // Agrupar por código de país y extraer solo números
       const grouped = {};
       list.forEach(stickerId => {
-        const code = stickerId.replace(/\d+$/, '');
-        if (!grouped[code]) grouped[code] = { code: code, stickers: [] };
-        grouped[code].stickers.push(stickerId);
-      });
-
-      let yPos = firstHeaderH + 20;
-
-      // Usar fuente Courier (monospace) para mejor legibilidad
-      doc.setFont('courier', 'normal');
-
-      for (let code in grouped) {
-        const group = grouped[code];
-        group.stickers.sort((a, b) => {
-          const numA = parseInt(a.replace(/\D/g, '')) || 0;
-          const numB = parseInt(b.replace(/\D/g, '')) || 0;
-          return numA - numB;
-        });
-
-        if (yPos > maxY - 8) {
-          doc.addPage();
-          // Encabezado completo en páginas subsiguientes
-          const contHeaderH = _pdfDrawHeader(doc, pageWidth, title, false, list);
-          yPos = contHeaderH + 8;
-        }
-
-        // Stickers: fondo blanco, borde negro, texto negro negrita
-        const stickerW = 14;
-        const stickerH = 5.5;
-        const stickerGap = 1.5;
-        const stickersPerRow = Math.floor((pageWidth - margin * 2) / (stickerW + stickerGap));
-
-        // Encabezado de sección: prefijo de país con texto de bandera (sin emoji)
-        const flagText = PDF_FLAG_TEXT[group.code] || `[${group.code}]`;
-        const secLabel = `${flagText} ${group.code}`;
-        doc.setFontSize(7);
-        doc.setFont('courier', 'bold');
-        doc.setTextColor(245, 197, 66);
-        doc.text(secLabel, margin, yPos);
-        yPos += 4;
-
-        // Dibujar los stickers en filas con estilo blanco/negro
-        let colIdx = 0;
-        let rowX = margin;
-        let rowY = yPos;
-
-        group.stickers.forEach((sid, idx) => {
-          if (colIdx > 0 && colIdx % stickersPerRow === 0) {
-            rowX = margin;
-            rowY += stickerH + stickerGap;
-            colIdx = 0;
-            if (rowY + stickerH > maxY) {
-              doc.addPage();
-              const contHeaderH = _pdfDrawHeader(doc, pageWidth, title, false, list);
-              rowY = contHeaderH + 8;
-            }
+        // Manejar FWC00 como caso especial
+        if (stickerId === 'FWC00') {
+          if (!grouped['FWC']) grouped['FWC'] = [];
+          grouped['FWC'].push('00');
+        } else {
+          const match = stickerId.match(/^([A-Z]+)(\d+)$/);
+          if (match) {
+            const code = match[1];
+            const number = match[2].replace(/^0+/, ''); // Eliminar ceros a la izquierda
+            if (!grouped[code]) grouped[code] = [];
+            grouped[code].push(number);
           }
-          // Fondo blanco
-          doc.setFillColor(255, 255, 255);
-          doc.setDrawColor(0, 0, 0);
-          doc.setLineWidth(0.3);
-          doc.rect(rowX + colIdx * (stickerW + stickerGap), rowY, stickerW, stickerH, 'FD');
-          // Texto negro negrita centrado
-          doc.setFont('courier', 'bold');
-          doc.setFontSize(5);
-          doc.setTextColor(0, 0, 0);
-          doc.text(
-            sid,
-            rowX + colIdx * (stickerW + stickerGap) + stickerW / 2,
-            rowY + stickerH / 2 + 1,
-            { align: 'center' }
-          );
-          colIdx++;
+        }
+      });
+      
+      let yPos = 52;
+      const maxY = pageHeight - 20;
+      const lineHeight = 5;
+      
+      doc.setFont('helvetica', 'normal');
+      
+      for (let code in grouped) {
+        // Ordenar números numéricamente (00 va al inicio)
+        grouped[code].sort((a, b) => {
+          if (a === '00') return -1;
+          if (b === '00') return 1;
+          return parseInt(a) - parseInt(b);
         });
-
-        yPos = rowY + stickerH + 4;
+        
+        // Verificar espacio en página
+        if (yPos > maxY - 10) {
+          doc.addPage();
+          yPos = 20;
+          // Reimprimir encabezado
+          doc.setFillColor(4, 18, 46);
+          doc.rect(0, 0, pageWidth, 20, 'F');
+          doc.setDrawColor(245, 197, 66);
+          doc.line(0, 20, pageWidth, 20);
+          doc.setTextColor(245, 197, 66);
+          doc.setFontSize(12);
+          doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 8, { align: 'center' });
+          doc.setFontSize(7);
+          doc.setTextColor(200, 200, 200);
+          doc.text(title, pageWidth / 2, 14, { align: 'center' });
+        }
+        
+        // Formato: **PAÍS:** número1, número2, número3
+        const countryName = COUNTRY_NAMES[code] || code;
+        
+        // Título del país en negrita
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(245, 197, 66);
+        doc.setFontSize(9);
+        doc.text(`${countryName}:`, margin, yPos);
+        
+        // Números en texto normal
+        const numbersText = grouped[code].join(', ');
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(220, 220, 220);
+        doc.setFontSize(9);
+        
+        const prefixWidth = doc.getTextWidth(`${countryName}: `);
+        let currentX = margin + prefixWidth;
+        let currentY = yPos;
+        let remainingText = numbersText;
+        
+        while (remainingText.length > 0) {
+          let slice = remainingText;
+          let textWidth = doc.getTextWidth(slice);
+          const maxWidth = pageWidth - margin - 5 - currentX;
+          if (textWidth > maxWidth && slice.length > 0) {
+            const lastComma = slice.lastIndexOf(',');
+            if (lastComma === -1) {
+              const maxChars = Math.floor(maxWidth / 2.5);
+              slice = slice.substring(0, Math.max(1, maxChars));
+            } else {
+              slice = slice.substring(0, lastComma);
+            }
+            textWidth = doc.getTextWidth(slice);
+          }
+          if (slice.length > 0) {
+            doc.text(slice, currentX, currentY);
+            remainingText = remainingText.substring(slice.length);
+            if (remainingText.startsWith(', ')) remainingText = remainingText.substring(2);
+            currentY += lineHeight;
+            currentX = margin + 2;
+          } else {
+            break;
+          }
+          if (currentY > maxY - 8) {
+            doc.addPage();
+            currentY = 20;
+            currentX = margin + 2;
+            // Reimprimir encabezado
+            doc.setFillColor(4, 18, 46);
+            doc.rect(0, 0, pageWidth, 20, 'F');
+            doc.setDrawColor(245, 197, 66);
+            doc.line(0, 20, pageWidth, 20);
+            doc.setTextColor(245, 197, 66);
+            doc.setFontSize(12);
+            doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 8, { align: 'center' });
+            doc.setFontSize(7);
+            doc.setTextColor(200, 200, 200);
+            doc.text(title, pageWidth / 2, 14, { align: 'center' });
+          }
+        }
+        
+        yPos = currentY + 2;
       }
-
+      
       const fileName = `Panini2026_${currentView === 'missing' ? 'Faltantes' : 'Repetidas'}_${new Date().toISOString().split('T')[0]}.pdf`;
       doc.save(fileName);
       showToast(`✅ PDF generado: ${fileName}`, 2500);
@@ -1107,13 +1152,65 @@
     }
   }
 
+  // ==================== CORRECCIÓN 4: QR INTEROPERABLE ====================
+  function generateInteroperableQRData() {
+    const duplicatesMap = new Map(); // code -> array de números
+    for (const [sid, qty] of Object.entries(ownedState)) {
+      if (qty >= 2) {
+        if (sid === 'FWC00') {
+          const repeatCount = qty - 1;
+          if (!duplicatesMap.has('FWC')) duplicatesMap.set('FWC', []);
+          for (let i = 0; i < repeatCount; i++) {
+            duplicatesMap.get('FWC').push('00');
+          }
+        } else {
+          const match = sid.match(/^([A-Z]+)(\d+)$/);
+          if (match) {
+            const code = match[1];
+            const number = match[2].replace(/^0+/, '');
+            const repeatCount = qty - 1;
+            if (!duplicatesMap.has(code)) duplicatesMap.set(code, []);
+            for (let i = 0; i < repeatCount; i++) {
+              duplicatesMap.get(code).push(number);
+            }
+          }
+        }
+      }
+    }
+    
+    // Formato estándar: PANINI-REPEATS:v1
+    // país1:1,2,3
+    // país2:4,5,6
+    const lines = ['PANINI-REPEATS:v1'];
+    for (const [code, numbers] of duplicatesMap.entries()) {
+      numbers.sort((a, b) => {
+        if (a === '00') return -1;
+        if (b === '00') return 1;
+        return parseInt(a) - parseInt(b);
+      });
+      lines.push(`${code}:${numbers.join(',')}`);
+    }
+    return lines.join('\n');
+  }
+
+  function showQRPage() {
+    const qrData = generateInteroperableQRData();
+    const duplicateCount = getDuplicateCount();
+    document.getElementById('qrDataText').innerHTML = `<strong>📦 ${duplicateCount} stickers repetidos</strong><br><small>Formato compatible con otras apps</small>`;
+    document.getElementById('qrcode').innerHTML = '';
+    new QRCode(document.getElementById('qrcode'), { text: qrData, width: 200, height: 200 });
+    document.getElementById('mainPage').classList.remove('active');
+    document.getElementById('qrPage').classList.add('active');
+  }
+
+  // ==================== FUNCIONES DE ACTUALIZACIÓN DE UI ====================
   function updateGlobalStats() {
     const ownedCount = getOwnedCount();
-    const missing = TOTAL_STICKERS - ownedCount;
+    const missingCount = getMissingCount();
     const duplicateCount = getDuplicateCount();
     const percent = TOTAL_STICKERS ? Math.round((ownedCount / TOTAL_STICKERS) * 100) : 0;
     document.getElementById('stat-owned').innerText = ownedCount;
-    document.getElementById('stat-missing').innerText = missing;
+    document.getElementById('stat-missing').innerText = missingCount;
     document.getElementById('stat-total').innerText = TOTAL_STICKERS;
     document.getElementById('stat-percent').innerText = `${percent}%`;
     document.getElementById('stat-duplicates').innerText = duplicateCount;
@@ -1123,7 +1220,8 @@
     SECTIONS.forEach(sec => {
       let collected = 0;
       for(let i=1; i<=sec.n; i++) if(ownedState[`${sec.code}${i}`] >= 1) collected++;
-      if(sec.code === 'FWC' && ownedState['FWC00'] >= 1) collected++;
+      // Para FWC, también contar FWC00
+      if (sec.code === 'FWC' && ownedState['FWC00'] >= 1) collected++;
       const pbFill = document.getElementById(`pb-${sec.code}`);
       const pnSpan = document.getElementById(`pn-${sec.code}`);
       const cardDiv = document.getElementById(`card-${sec.code}`);
@@ -1145,11 +1243,15 @@
     stickers.forEach(s => s.style.display = 'flex');
     if (currentView === 'missing') {
       cardDiv.classList.toggle('hidden', collected === sec.n);
-      stickers.forEach(s => { if (ownedState[s.getAttribute('data-sticker-id')] >= 1) s.style.display = 'none'; });
+      stickers.forEach(s => { 
+        const sid = s.getAttribute('data-sticker-id');
+        if (ownedState[sid] >= 1) s.style.display = 'none'; 
+      });
     } else if (currentView === 'duplicates') {
       let has = false;
       stickers.forEach(s => {
-        if (ownedState[s.getAttribute('data-sticker-id')] >= 2) { s.style.display = 'flex'; has = true; }
+        const sid = s.getAttribute('data-sticker-id');
+        if (ownedState[sid] >= 2) { s.style.display = 'flex'; has = true; }
         else s.style.display = 'none';
       });
       cardDiv.classList.toggle('hidden', !has);
@@ -1231,7 +1333,7 @@
         if(sec) {
           let c = 0;
           for(let i=1; i<=sec.n; i++) if(ownedState[`${sec.code}${i}`] >= 1) c++;
-          if(sec.code === 'FWC' && ownedState['FWC00'] >= 1) c++;
+          if (sec.code === 'FWC' && ownedState['FWC00'] >= 1) c++;
           applyCurrentView(card, sec, c);
         }
       }
@@ -1281,6 +1383,7 @@
       const grid = document.createElement('div');
       grid.className = 'sticker-grid';
       
+      // Agregar sticker FWC00 solo para la sección FWC
       if (sec.code === 'FWC') {
         const sid = 'FWC00';
         const el = document.createElement('div');
@@ -1359,7 +1462,6 @@
     document.getElementById('missingBtn').classList.toggle('active-view', view === 'missing');
     document.getElementById('duplicatesBtn').classList.toggle('active-view', view === 'duplicates');
     
-    // Mostrar/ocultar barra de PDF según la vista
     const pdfBar = document.getElementById('pdfBar');
     if (view === 'missing' || view === 'duplicates') {
       pdfBar.classList.add('visible');
@@ -1371,21 +1473,12 @@
     showToast(view === 'album' ? '📒 Vista Álbum' : view === 'missing' ? '🔍 Mostrando faltantes' : '🔄 Mostrando repetidas', 1500);
   }
 
-  function showQRPage() {
-    const duplicates = getDuplicatesList();
-    const qrData = JSON.stringify({ stickers: duplicates, total: duplicates.length, timestamp: Date.now() });
-    document.getElementById('qrDataText').innerHTML = `<strong>📦 ${duplicates.length} stickers repetidos</strong><br><small>${qrData.substring(0, 100)}${qrData.length > 100 ? '...' : ''}</small>`;
-    document.getElementById('qrcode').innerHTML = '';
-    new QRCode(document.getElementById('qrcode'), { text: qrData, width: 200, height: 200 });
-    document.getElementById('mainPage').classList.remove('active');
-    document.getElementById('qrPage').classList.add('active');
-  }
-
   function backToAlbum() {
     document.getElementById('qrPage').classList.remove('active');
     document.getElementById('mainPage').classList.add('active');
   }
 
+  // Event Listeners
   document.getElementById('albumBtn').onclick = () => setView('album');
   document.getElementById('missingBtn').onclick = () => setView('missing');
   document.getElementById('duplicatesBtn').onclick = () => setView('duplicates');
