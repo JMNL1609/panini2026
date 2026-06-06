@@ -898,7 +898,7 @@
         for (let i = 0; i < numbers.length; i++) {
           const numStr = numbers[i].toString();
           doc.text(numStr, currentX, yPos);
-          currentX += doc.getTextWidth(numStr) + 2.0;
+          currentX += doc.getTextWidth(numStr) + 2.5;
           
           if (i < numbers.length - 1) {
             doc.setTextColor(100, 100, 100);
@@ -915,7 +915,7 @@
           }
         }
         
-        yPos += 7.0;
+        yPos += 9.0;
       }
       
       const fileName = `Panini2026_${currentView === 'missing' ? 'Faltantes' : 'Repetidas'}_${new Date().toISOString().split('T')[0]}.pdf`;
