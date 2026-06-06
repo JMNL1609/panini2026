@@ -741,7 +741,12 @@
     return duplicates;
   }
 
-  // ==================== FUNCIÓN PDF CON MEJORAS COSMÉTICAS ====================
+  // ==================== FUNCIÓN PDF MODIFICADA ====================
+  // Cambios realizados:
+  // 1. Eliminados los círculos - solo números
+  // 2. Los ":" alineados verticalmente usando columna fija
+  // 3. Más interlineado entre países (6mm en lugar de 3.5mm)
+  // 4. Orden de países según SECTIONS (mismo que en Álbum)
   async function generatePDF() {
     let list = [];
     let title = '';
@@ -819,8 +824,32 @@
         }
       });
       
-      // Ordenar países
-      const sortedCountries = Object.keys(grouped).sort();
+      // Ordenar países según el orden de SECTIONS (mismo que en el Álbum)
+      const sortedCountries = [];
+      for (const section of SECTIONS) {
+        if (grouped[section.code]) {
+          sortedCountries.push(section.code);
+        }
+      }
+      // También agregar códigos que pudieran no estar en SECTIONS (como FWC por si acaso)
+      for (const code of Object.keys(grouped)) {
+        if (!sortedCountries.includes(code)) {
+          sortedCountries.push(code);
+        }
+      }
+      
+      // Calcular el ancho máximo del texto "XXXX:" para alinear los dos puntos
+      let maxCountryTextWidth = 0;
+      for (const countryCode of sortedCountries) {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        const textWidth = doc.getTextWidth(`${countryCode}:`);
+        if (textWidth > maxCountryTextWidth) {
+          maxCountryTextWidth = textWidth;
+        }
+      }
+      // Columna fija para los códigos de país (ancho máximo + 2mm)
+      const countryColumnWidth = maxCountryTextWidth + 2;
       
       for (const countryCode of sortedCountries) {
         let numbers = grouped[countryCode];
@@ -887,51 +916,56 @@
           }
         }
         
+        // Guardar la posición X donde empieza el código del país
+        const countryStartX = currentX;
+        
         // Código del país en mayúsculas, color NEGRO y negrita, seguido de ":"
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(9);
         const countryText = `${countryCode}:`;
-        doc.text(countryText, currentX, yPos);
-        currentX += doc.getTextWidth(countryText) + 2;
+        doc.text(countryText, countryStartX, yPos);
         
-        // Números con círculo SIN RELLENO (solo borde), números en negrita color negro
+        // Calcular la posición donde deben comenzar los números (columna fija alineada)
+        const numbersStartX = countryStartX + countryColumnWidth;
+        
+        // Números SIN círculos, solo los números en negrita color negro
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
-        doc.setFontSize(7.5);
+        doc.setFontSize(8);
+        
+        let currentNumbersX = numbersStartX;
         
         for (let i = 0; i < numbers.length; i++) {
           const num = numbers[i];
           const numStr = num.toString();
-          const circleRadius = 2.5;
-          const circleX = currentX + circleRadius;
-          const circleY = yPos - 2;
           
-          // Dibujar círculo solo con borde (sin relleno)
-          doc.setDrawColor(0, 0, 0);
-          doc.setFillColor(255, 255, 255);
-          doc.circle(circleX, circleY, circleRadius, 'D'); // 'D' = solo borde
-          
-          // Número en negrita color negro dentro del círculo
-          doc.setTextColor(0, 0, 0);
-          doc.setFontSize(6.5);
-          const numWidth = doc.getTextWidth(numStr);
-          doc.text(numStr, circleX - (numWidth / 2), circleY + 1);
-          
-          currentX += (circleRadius * 2) + 1.5;
+          // Número en negrita sin círculo
+          doc.text(numStr, currentNumbersX, yPos);
+          currentNumbersX += doc.getTextWidth(numStr) + 1.5;
           
           // Separador "–" entre números
           if (i < numbers.length - 1) {
             doc.setTextColor(100, 100, 100);
-            doc.setFontSize(7);
-            doc.text('–', currentX, yPos);
-            currentX += 2.5;
+            doc.setFontSize(7.5);
+            doc.text('–', currentNumbersX, yPos);
+            currentNumbersX += 2.5;
             doc.setTextColor(0, 0, 0);
+            doc.setFontSize(8);
+          }
+          
+          // Salto de línea si es necesario
+          if (currentNumbersX > pageWidth - margin) {
+            yPos += 4;
+            currentNumbersX = numbersStartX;
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(8);
           }
         }
         
-        // Interlineado mínimo entre países (2mm)
-        yPos += 3.5;
+        // Más interlineado entre países (6mm para que no se vean amontonadas)
+        yPos += 6;
       }
       
       const fileName = `Panini2026_${currentView === 'missing' ? 'Faltantes' : 'Repetidas'}_${new Date().toISOString().split('T')[0]}.pdf`;
