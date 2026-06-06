@@ -741,12 +741,7 @@
     return duplicates;
   }
 
-  // ==================== FUNCIÓN PDF MODIFICADA ====================
-  // Cambios realizados:
-  // 1. Eliminados los círculos - solo números
-  // 2. Los ":" alineados verticalmente usando columna fija
-  // 3. Más interlineado entre países (6mm en lugar de 3.5mm)
-  // 4. Orden de países según SECTIONS (mismo que en Álbum)
+  // ==================== FUNCIÓN PDF CON SIMETRÍA PERFECTA ====================
   async function generatePDF() {
     let list = [];
     let title = '';
@@ -831,25 +826,28 @@
           sortedCountries.push(section.code);
         }
       }
-      // También agregar códigos que pudieran no estar en SECTIONS (como FWC por si acaso)
-      for (const code of Object.keys(grouped)) {
-        if (!sortedCountries.includes(code)) {
-          sortedCountries.push(code);
-        }
-      }
       
-      // Calcular el ancho máximo del texto "XXXX:" para alinear los dos puntos
-      let maxCountryTextWidth = 0;
+      // Calcular el ancho máximo de la parte "bandera + código:" para alinear los ":"
+      let maxPrefixWidth = 0;
       for (const countryCode of sortedCountries) {
+        const section = SECTIONS.find(s => s.code === countryCode);
+        const useEmoji = section && section.useEmoji;
+        
+        // Ancho de la bandera (5mm para PNG, 5mm para emoji)
+        let prefixWidth = 5; // espacio para bandera
+        
+        // Ancho del texto del código con ":"
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(9);
         const textWidth = doc.getTextWidth(`${countryCode}:`);
-        if (textWidth > maxCountryTextWidth) {
-          maxCountryTextWidth = textWidth;
+        prefixWidth += textWidth;
+        
+        if (prefixWidth > maxPrefixWidth) {
+          maxPrefixWidth = prefixWidth;
         }
       }
-      // Columna fija para los códigos de país (ancho máximo + 2mm)
-      const countryColumnWidth = maxCountryTextWidth + 2;
+      // Añadir un pequeño margen extra para alineación perfecta
+      const columnWidth = maxPrefixWidth + 2;
       
       for (const countryCode of sortedCountries) {
         let numbers = grouped[countryCode];
@@ -875,12 +873,16 @@
           doc.text(title, pageWidth / 2, 15, { align: 'center' });
         }
         
+        // Posición inicial después del margen
         let currentX = margin;
         const flagSize = 4.5;
         
         // Verificar si el país tiene bandera PNG (FWC y CC usan emoji)
         const section = SECTIONS.find(s => s.code === countryCode);
         const useEmoji = section && section.useEmoji;
+        
+        // Guardar la posición X del inicio de la línea
+        const lineStartX = currentX;
         
         if (useEmoji) {
           // Usar emoji para FWC y CC
@@ -916,18 +918,16 @@
           }
         }
         
-        // Guardar la posición X donde empieza el código del país
-        const countryStartX = currentX;
-        
         // Código del país en mayúsculas, color NEGRO y negrita, seguido de ":"
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(9);
         const countryText = `${countryCode}:`;
-        doc.text(countryText, countryStartX, yPos);
+        doc.text(countryText, currentX, yPos);
         
         // Calcular la posición donde deben comenzar los números (columna fija alineada)
-        const numbersStartX = countryStartX + countryColumnWidth;
+        // Usamos la columna calculada basada en el ancho máximo del prefijo
+        const numbersStartX = lineStartX + columnWidth;
         
         // Números SIN círculos, solo los números en negrita color negro
         doc.setFont('helvetica', 'bold');
@@ -954,7 +954,7 @@
             doc.setFontSize(8);
           }
           
-          // Salto de línea si es necesario
+          // Salto de línea si es necesario (muy raro que ocurra ahora con la alineación)
           if (currentNumbersX > pageWidth - margin) {
             yPos += 4;
             currentNumbersX = numbersStartX;
