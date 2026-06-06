@@ -741,7 +741,7 @@
     return duplicates;
   }
 
-  // ==================== FUNCIÓN PDF CON SIMETRÍA PERFECTA ====================
+  // ==================== FUNCIÓN PDF CORREGIDA ====================
   async function generatePDF() {
     let list = [];
     let title = '';
@@ -771,11 +771,9 @@
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 15;
       
-      // CONSTANTE: Posición Y donde comienza el contenido
       const CONTENT_START_Y = 55;
       let yPos = CONTENT_START_Y;
       
-      // Función para dibujar el encabezado
       function drawHeader() {
         doc.setFillColor(4, 18, 46);
         doc.rect(0, 0, pageWidth, 42, 'F');
@@ -804,10 +802,9 @@
         doc.text(`Total: ${list.length} cromos`, margin, 44);
       }
       
-      // Dibujar encabezado primera página
       drawHeader();
       
-      // Agrupar por código de país
+      // Agrupar por código
       const grouped = {};
       list.forEach(stickerId => {
         if (stickerId === 'FWC00') {
@@ -832,19 +829,19 @@
         }
       }
       
-      // Calcular ancho máximo del texto "XXXX:"
+      // Calcular ancho máximo del código (sin bandera)
       let maxCodeWidth = 0;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
       for (const countryCode of sortedCountries) {
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(9);
         const textWidth = doc.getTextWidth(`${countryCode}:`);
         if (textWidth > maxCodeWidth) {
           maxCodeWidth = textWidth;
         }
       }
       
-      const FLAG_WIDTH = 6;
-      const CODE_COLUMN_WIDTH = maxCodeWidth + FLAG_WIDTH;
+      const FLAG_WIDTH = 7;
+      const COLUMN_WIDTH = maxCodeWidth + FLAG_WIDTH;
       
       for (const countryCode of sortedCountries) {
         let numbers = grouped[countryCode];
@@ -854,82 +851,71 @@
           return a - b;
         });
         
-        // Verificar espacio en página
         if (yPos > pageHeight - 15) {
           doc.addPage();
           yPos = CONTENT_START_Y;
           drawHeader();
         }
         
-        let currentX = margin;
-        
+        // Dibujar bandera o emoji en posición fija
+        const flagX = margin;
         const section = SECTIONS.find(s => s.code === countryCode);
-        const useEmoji = section && section.useEmoji;
         
-        if (useEmoji) {
+        if (section && section.useEmoji) {
           doc.setFont('helvetica', 'normal');
-          doc.setFontSize(11);
-          doc.text(section.flag, currentX, yPos);
-          currentX += FLAG_WIDTH;
+          doc.setFontSize(12);
+          doc.text(section.flag, flagX, yPos);
         } else {
           try {
             const flagUrl = `flags/${countryCode}.png`;
             const img = new Image();
             img.crossOrigin = "Anonymous";
-            
             await new Promise((resolve) => {
               img.onload = resolve;
               img.onerror = resolve;
               img.src = flagUrl;
             });
-            
             if (img.complete && img.naturalWidth > 0) {
-              try {
-                doc.addImage(img, 'PNG', currentX, yPos - 3.5, 5, 4);
-              } catch(e) {}
+              doc.addImage(img, 'PNG', flagX, yPos - 3.5, 5.5, 4.5);
             }
-            currentX += FLAG_WIDTH;
-          } catch(e) {
-            currentX += FLAG_WIDTH;
-          }
+          } catch(e) {}
         }
         
-        // Código del país en negrita
+        // Código del país con ":" alineado (todos comienzan en la misma posición)
+        const codeX = margin + FLAG_WIDTH;
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(9);
-        doc.text(`${countryCode}:`, currentX, yPos);
+        doc.text(`${countryCode}:`, codeX, yPos);
         
-        // Posición alineada para los números (TODOS los ":" en la misma columna)
-        const numbersStartX = margin + CODE_COLUMN_WIDTH;
-        
+        // Números alineados (todos comienzan en COLUMN_WIDTH)
+        const numbersStartX = margin + COLUMN_WIDTH;
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(8);
         
-        let currentNumbersX = numbersStartX;
-        
+        let currentX = numbersStartX;
         for (let i = 0; i < numbers.length; i++) {
           const numStr = numbers[i].toString();
-          doc.text(numStr, currentNumbersX, yPos);
-          currentNumbersX += doc.getTextWidth(numStr) + 1.5;
+          doc.text(numStr, currentX, yPos);
+          currentX += doc.getTextWidth(numStr) + 1.5;
           
           if (i < numbers.length - 1) {
             doc.setTextColor(100, 100, 100);
             doc.setFontSize(7.5);
-            doc.text('–', currentNumbersX, yPos);
-            currentNumbersX += 2.5;
+            doc.text('–', currentX, yPos);
+            currentX += 2.5;
             doc.setTextColor(0, 0, 0);
             doc.setFontSize(8);
           }
           
-          if (currentNumbersX > pageWidth - margin) {
+          if (currentX > pageWidth - margin) {
             yPos += 4;
-            currentNumbersX = numbersStartX;
+            currentX = numbersStartX;
           }
         }
         
-        yPos += 5;
+        yPos += 5.5;
       }
       
       const fileName = `Panini2026_${currentView === 'missing' ? 'Faltantes' : 'Repetidas'}_${new Date().toISOString().split('T')[0]}.pdf`;
@@ -990,7 +976,7 @@
     document.getElementById('qrPage').classList.add('active');
   }
 
-  // ==================== FUNCIONES UI ====================
+  // ==================== FUNCIONES UI (sin cambios) ====================
   function updateGlobalStats() {
     const ownedCount = getOwnedCount();
     const missingCount = getMissingCount();
