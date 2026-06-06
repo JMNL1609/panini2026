@@ -798,7 +798,7 @@
         doc.setTextColor(150, 150, 150);
         doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
-        doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX')}`, margin, 32);
+        doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX')}`, margin, 34);
         doc.text(`Total: ${list.length} cromos`, margin, 38);
       }
       
@@ -898,7 +898,7 @@
         for (let i = 0; i < numbers.length; i++) {
           const numStr = numbers[i].toString();
           doc.text(numStr, currentX, yPos);
-          currentX += doc.getTextWidth(numStr) + 1.5;
+          currentX += doc.getTextWidth(numStr) + 2.0;
           
           if (i < numbers.length - 1) {
             doc.setTextColor(100, 100, 100);
@@ -915,7 +915,7 @@
           }
         }
         
-        yPos += 5.5;
+        yPos += 7.0;
       }
       
       const fileName = `Panini2026_${currentView === 'missing' ? 'Faltantes' : 'Repetidas'}_${new Date().toISOString().split('T')[0]}.pdf`;
