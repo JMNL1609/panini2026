@@ -889,7 +889,7 @@
         doc.text(`${countryCode}:`, codeX, yPos);
         
         // Números alineados (todos comienzan en COLUMN_WIDTH)
-        const numbersStartX = margin + COLUMN_WIDTH + 2.5;
+        const numbersStartX = margin + COLUMN_WIDTH + 4.0;
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(8);
@@ -898,17 +898,23 @@
         for (let i = 0; i < numbers.length; i++) {
           const numStr = numbers[i].toString();
           doc.text(numStr, currentX, yPos);
-          currentX += doc.getTextWidth(numStr) + 2.5;
-          
+          currentX += doc.getTextWidth(numStr);
+  
           if (i < numbers.length - 1) {
+            const espacio = 2.5; // Espacio total entre números
+            const medioEspacio = espacio / 2; // 1.25 para cada lado
+    
+            currentX += medioEspacio; // Espacio ANTES del guión
+    
             doc.setTextColor(100, 100, 100);
             doc.setFontSize(7.5);
             doc.text('–', currentX, yPos);
-            currentX += 2.5;
             doc.setTextColor(0, 0, 0);
             doc.setFontSize(8);
+    
+            currentX += medioEspacio; // Espacio DESPUÉS del guión
           }
-          
+  
           if (currentX > pageWidth - margin) {
             yPos += 4;
             currentX = numbersStartX;
