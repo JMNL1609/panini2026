@@ -9,11 +9,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Panini 2026">
-  <link rel="manifest" href="manifest.json">
   
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=Bebas+Neue&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  
   <style>
     * {
       margin: 0;
@@ -23,40 +23,24 @@
     }
 
     :root {
-      --grid-unit: 8px;
-      --grid-half: 4px;
       --space-xs: 4px;
       --space-sm: 8px;
       --space-md: 16px;
       --space-lg: 24px;
       --space-xl: 32px;
       --touch-min: 48px;
-      --touch-large: 56px;
       --gold: #F5C542;
       --gold-dark: #C6921E;
       --gold-glow: rgba(245, 197, 66, 0.35);
       --red: #E03A3E;
-      --red-dim: #A12226;
       --blue-deep: #0A1A3A;
-      --blue-mid: #0F2648;
-      --blue-light: #1A3A6E;
       --bg-main: #030614;
       --card-bg: #0B1429;
       --border-glow: rgba(245, 197, 66, 0.25);
       --text-light: #F0F3FA;
       --text-muted: #8A9DC0;
-      --text-white: #FFFFFF;
-      --owned-bg: #0C331F;
       --owned-border: #2AD18A;
-      --owned-text: #A3F0C0;
-      --orange-bg: #3B1A0A;
       --orange-border: #FF8C00;
-      --orange-text: #FFD700;
-      --stadium-gradient: linear-gradient(145deg, #0C1428 0%, #061027 100%);
-    }
-
-    html {
-      font-size: 16px;
     }
 
     body {
@@ -64,21 +48,6 @@
       font-family: 'Inter', sans-serif;
       color: var(--text-light);
       overflow-x: hidden;
-      position: relative;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: 
-        radial-gradient(circle at 20% 40%, rgba(232, 192, 68, 0.03) 0%, transparent 40%),
-        repeating-linear-gradient(45deg, rgba(255,255,255,0.01) 0px, rgba(255,255,255,0.01) 2px, transparent 2px, transparent 8px);
-      pointer-events: none;
-      z-index: 0;
     }
 
     .app-container {
@@ -88,26 +57,10 @@
     }
 
     .hero {
-      position: relative;
       background: linear-gradient(135deg, #04112e 0%, #071a3a 100%);
       border-bottom: 3px solid var(--gold);
       padding: var(--space-lg) var(--space-md);
       text-align: center;
-      overflow: hidden;
-      box-shadow: 0 var(--space-sm) var(--space-lg) rgba(0,0,0,0.4);
-      width: 100%;
-    }
-
-    .hero::after {
-      content: "⚽🏆⚽";
-      position: absolute;
-      bottom: 0;
-      right: 10px;
-      font-size: 70px;
-      opacity: 0.05;
-      pointer-events: none;
-      font-family: monospace;
-      white-space: pre;
     }
 
     .trophy-icon {
@@ -130,7 +83,6 @@
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      text-shadow: 0 2px 5px rgba(0,0,0,0.3);
       margin: var(--space-xs) 0;
     }
 
@@ -139,9 +91,6 @@
       letter-spacing: 3px;
       text-transform: uppercase;
       color: var(--text-muted);
-      border-top: 1px dashed rgba(245,197,66,0.3);
-      display: inline-block;
-      padding-top: var(--space-sm);
     }
 
     .owner-badge {
@@ -155,8 +104,6 @@
       margin-top: var(--space-sm);
       border: 1px solid rgba(245,197,66,0.4);
       font-size: 0.75rem;
-      font-weight: 500;
-      color: var(--text-white);
     }
 
     .stats-panel {
@@ -167,21 +114,14 @@
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: var(--space-sm);
-      align-items: center;
-      width: 100%;
     }
 
     .stat-card {
       background: rgba(255,255,255,0.02);
       padding: var(--space-sm) var(--space-md);
       border-radius: 24px;
-      min-width: 0;
-      min-height: var(--touch-min);
       text-align: center;
       border: 1px solid rgba(245,197,66,0.15);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
     }
 
     .stat-number {
@@ -205,16 +145,6 @@
 
     .progress-container {
       grid-column: 1 / -1;
-      min-width: 0;
-    }
-
-    .progress-header {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.7rem;
-      margin-bottom: var(--space-xs);
-      font-weight: 600;
-      color: var(--text-white);
     }
 
     .progress-bar-bg {
@@ -237,7 +167,6 @@
       background: rgba(6, 14, 28, 0.8);
       backdrop-filter: blur(8px);
       border-bottom: 1px solid rgba(245,197,66,0.2);
-      width: 100%;
     }
 
     .search-field {
@@ -248,8 +177,6 @@
       display: flex;
       gap: var(--space-sm);
       align-items: center;
-      min-height: var(--touch-min);
-      width: 100%;
     }
 
     .search-field input {
@@ -261,21 +188,13 @@
       outline: none;
     }
 
-    .search-field input::placeholder {
-      color: #5F74A0;
-      font-size: 0.75rem;
-    }
-
     .action-bar {
       padding: var(--space-sm) var(--space-md);
       display: flex;
       gap: var(--space-sm);
-      align-items: center;
-      justify-content: space-between;
       background: rgba(6, 14, 28, 0.8);
       backdrop-filter: blur(8px);
       border-bottom: 1px solid rgba(245,197,66,0.2);
-      width: 100%;
       flex-wrap: wrap;
     }
 
@@ -284,9 +203,9 @@
       background: rgba(6, 14, 28, 0.8);
       backdrop-filter: blur(8px);
       border-bottom: 1px solid rgba(245,197,66,0.2);
-      width: 100%;
       display: none;
     }
+    
     .pdf-bar.visible {
       display: block;
     }
@@ -306,9 +225,7 @@
       gap: 4px;
       cursor: pointer;
       transition: all 0.2s ease;
-      backdrop-filter: blur(4px);
       min-height: var(--touch-min);
-      white-space: nowrap;
       flex: 1;
       text-align: center;
     }
@@ -320,8 +237,7 @@
       width: 100%;
     }
 
-    .btn:active { transform: scale(0.96); background: rgba(245,197,66,0.2);}
-    
+    .btn:active { transform: scale(0.96); }
     .btn.active-view {
       background: rgba(245,197,66,0.25);
       border-color: var(--gold);
@@ -330,20 +246,16 @@
 
     .flags-grid {
       padding: var(--space-md);
-      background: rgba(10, 20, 40, 0.7);
-      backdrop-filter: blur(8px);
-      border-bottom: 1px solid rgba(245,197,66,0.2);
       display: grid;
       grid-template-columns: repeat(5, 1fr);
       gap: var(--space-xs);
-      width: 100%;
     }
 
     .flag-btn-grid {
       background: rgba(20, 30, 55, 0.8);
       border: 1px solid rgba(245,197,66,0.3);
       border-radius: 30px;
-      padding: var(--space-xs) var(--space-xs);
+      padding: var(--space-xs);
       font-size: 0.7rem;
       font-weight: 600;
       display: flex;
@@ -351,16 +263,8 @@
       justify-content: center;
       gap: 4px;
       cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
-      color: var(--text-light);
-      backdrop-filter: blur(4px);
       min-height: 44px;
-    }
-
-    .flag-btn-grid:active {
-      transform: scale(0.94);
-      background: rgba(245,197,66,0.3);
+      color: var(--text-light);
     }
 
     .teams-grid {
@@ -368,10 +272,6 @@
       grid-template-columns: 1fr;
       gap: var(--space-md);
       padding: var(--space-md);
-      max-width: 100%;
-      margin: 0 auto;
-      position: relative;
-      z-index: 2;
     }
 
     .team-card {
@@ -379,8 +279,6 @@
       border-radius: 20px;
       border: 1px solid rgba(245,197,66,0.2);
       overflow: hidden;
-      transition: all 0.2s;
-      backdrop-filter: blur(2px);
     }
 
     .team-card.complete {
@@ -394,7 +292,6 @@
       gap: var(--space-sm);
       padding: var(--space-sm) var(--space-md);
       background: linear-gradient(95deg, rgba(245,197,66,0.08), transparent);
-      cursor: default;
       border-bottom: 1px solid rgba(255,255,255,0.04);
       min-height: var(--touch-min);
     }
@@ -402,7 +299,6 @@
     .team-flag {
       font-size: 1.5rem;
       filter: drop-shadow(0 2px 4px black);
-      flex-shrink: 0;
     }
 
     .team-code {
@@ -410,7 +306,6 @@
       font-size: 1.2rem;
       color: var(--gold);
       letter-spacing: 1px;
-      flex-shrink: 0;
     }
 
     .team-name {
@@ -418,7 +313,6 @@
       font-weight: 600;
       font-size: 0.65rem;
       text-transform: uppercase;
-      letter-spacing: 1px;
       color: var(--text-muted);
     }
 
@@ -428,12 +322,9 @@
       gap: var(--space-xs);
       font-size: 0.65rem;
       font-weight: 700;
-      flex-shrink: 0;
       padding: 4px 8px;
       border-radius: 12px;
       background: rgba(0,0,0,0.3);
-      cursor: default;
-      pointer-events: none;
     }
 
     .team-progress-bar {
@@ -448,7 +339,6 @@
       height: 100%;
       background: var(--gold);
       width: 0%;
-      border-radius: 4px;
     }
 
     .complete-tag {
@@ -467,8 +357,6 @@
       flex-wrap: wrap;
       gap: var(--space-xs);
       padding: var(--space-sm);
-      padding-bottom: 48px;
-      background: rgba(0,0,0,0.2);
       position: relative;
       justify-content: flex-start;
     }
@@ -488,30 +376,19 @@
       font-weight: 700;
       color: #9AACD0;
       cursor: pointer;
-      transition: all 0.12s linear;
-      backdrop-filter: blur(2px);
-      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
       position: relative;
-      -webkit-touch-callout: none;
-      user-select: none;
-    }
-
-    .sticker:active {
-      transform: scale(0.96);
     }
 
     .sticker.owned {
       background: linear-gradient(145deg, #0D3B20, #072613);
-      border-color: var(--owned-border);
+      border-color: #2AD18A;
       color: #C6FFDD;
-      box-shadow: 0 0 6px rgba(42,209,138,0.3);
     }
 
     .sticker.duplicate {
       background: linear-gradient(145deg, #3B1A0A, #2A0E04);
       border-color: #FF8C00;
       color: #FFD700;
-      box-shadow: 0 0 8px rgba(255,140,0,0.4);
     }
 
     .duplicate-badge {
@@ -529,18 +406,6 @@
       font-size: 0.55rem;
       font-weight: 900;
       border: 2px solid #030614;
-      box-shadow: 0 0 8px rgba(255,140,0,0.6);
-      z-index: 10;
-    }
-
-    @keyframes stickerPop {
-      0% { transform: scale(1); background: rgba(245,197,66,0.3);}
-      50% { transform: scale(1.2); background: rgba(245,197,66,0.5);}
-      100% { transform: scale(1);}
-    }
-
-    .sticker-pop {
-      animation: stickerPop 0.2s ease;
     }
 
     .team-card.hidden {
@@ -559,15 +424,7 @@
       font-weight: 600;
       color: var(--gold);
       cursor: pointer;
-      backdrop-filter: blur(4px);
-      transition: all 0.2s;
-      z-index: 5;
       min-height: 36px;
-    }
-
-    .scroll-top-btn:active {
-      transform: scale(0.94);
-      background: rgba(245,197,66,0.2);
     }
 
     .toast-notify {
@@ -586,22 +443,10 @@
       z-index: 1000;
       transition: transform 0.3s ease;
       white-space: nowrap;
-      pointer-events: none;
-      font-family: monospace;
     }
 
     .toast-notify.show {
       transform: translateX(-50%) translateY(0px);
-    }
-
-    .world-cup-footer {
-      text-align: center;
-      padding: var(--space-lg) var(--space-md);
-      font-size: 0.55rem;
-      color: #4a6188;
-      border-top: 1px solid rgba(245,197,66,0.15);
-      margin-top: var(--space-md);
-      background: radial-gradient(circle at bottom, #0a0f1e, transparent);
     }
 
     .modal-overlay {
@@ -616,7 +461,6 @@
       align-items: center;
       justify-content: center;
       z-index: 2000;
-      padding: var(--space-md);
     }
 
     .modal-dialog {
@@ -625,7 +469,6 @@
       border-radius: 20px;
       padding: var(--space-lg);
       text-align: center;
-      box-shadow: 0 0 30px rgba(245,197,66,0.3);
       max-width: 320px;
       width: 100%;
     }
@@ -633,7 +476,6 @@
     .modal-dialog p {
       font-size: 0.85rem;
       margin-bottom: var(--space-lg);
-      color: var(--text-light);
     }
 
     .modal-buttons {
@@ -647,7 +489,6 @@
       border-radius: 30px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
       font-size: 0.8rem;
       min-height: var(--touch-min);
     }
@@ -677,20 +518,6 @@
       margin: var(--space-lg) 0;
     }
 
-    .qr-data {
-      background: rgba(0,0,0,0.5);
-      padding: var(--space-md);
-      border-radius: 12px;
-      font-family: monospace;
-      font-size: 0.7rem;
-      word-break: break-all;
-      margin-top: var(--space-md);
-    }
-
-    .back-btn {
-      margin-top: var(--space-lg);
-    }
-
     .page {
       display: none;
     }
@@ -699,46 +526,12 @@
       display: block;
     }
 
-    @media (max-width: 600px) {
-      .action-bar {
-        gap: var(--space-xs);
-        padding: var(--space-sm) var(--space-xs);
-      }
-      .btn {
-        font-size: 0.6rem;
-        padding: 0 var(--space-xs);
-        min-height: 44px;
-      }
-    }
-
     @media (min-width: 600px) {
       .stats-panel {
         grid-template-columns: repeat(5, 1fr);
-        gap: var(--space-md);
-        padding: var(--space-md) var(--space-lg);
-      }
-      .progress-container {
-        grid-column: 1 / -1;
       }
       .teams-grid {
         grid-template-columns: repeat(2, 1fr);
-        padding: var(--space-lg);
-        gap: var(--space-lg);
-      }
-      .sticker {
-        width: 56px;
-        height: 40px;
-        font-size: 0.65rem;
-      }
-      .flags-grid {
-        grid-template-columns: repeat(5, 1fr);
-      }
-      .action-bar {
-        padding: var(--space-sm) var(--space-md);
-      }
-      .btn {
-        font-size: 0.7rem;
-        padding: 0 var(--space-md);
       }
     }
 
@@ -763,8 +556,7 @@
     <h1 class="main-title">FIFA WORLD CUP 2026</h1>
     <div class="subhead">PANINI DIGITAL ALBUM · EDITION GOLD</div>
     <div class="owner-badge">
-      <span>👤</span>
-      <span>SEBASTIAN NAVARRO</span>
+      <span>👤 SEBASTIAN NAVARRO</span>
       <span>🇲🇽🇺🇸🇨🇦</span>
     </div>
   </div>
@@ -776,7 +568,6 @@
     <div class="stat-card"><div class="stat-number gold-text" id="stat-percent">0%</div><div class="stat-label">COMPLETO</div></div>
     <div class="stat-card"><div class="stat-number orange-text" id="stat-duplicates">0</div><div class="stat-label">REPETIDAS</div></div>
     <div class="progress-container">
-      <div class="progress-header"><span>🏟️ PROGRESO MUNDIAL 2026</span><span id="progress-ratio">0/0</span></div>
       <div class="progress-bar-bg"><div class="progress-fill-main" id="global-progress-fill"></div></div>
     </div>
   </div>
@@ -802,8 +593,7 @@
   <div class="flags-grid" id="flagsGridContainer"></div>
   <div class="teams-grid" id="teamsContainer"></div>
   <div class="world-cup-footer">
-    ⚽ 48 EQUIPOS · 1014 CROMOS OFICIALES ⚽<br>
-    Toca cada sticker para coleccionar · Doble toque para deshacer
+    ⚽ 48 EQUIPOS · 1015 CROMOS OFICIALES ⚽
   </div>
 </div>
 
@@ -878,7 +668,6 @@
     { code:'CC',  name:'Tarjetas Especiales', flag:'⭐', n:14 },
   ];
 
-  // Mapeo de códigos a nombres de países (para PDF)
   const COUNTRY_NAMES = {
     'FWC': 'FIFA WORLD CUP', 'MEX': 'MÉXICO', 'RSA': 'SUDÁFRICA', 'KOR': 'COREA DEL SUR',
     'CZE': 'REPÚBLICA CHECA', 'CAN': 'CANADÁ', 'BIH': 'BOSNIA Y HERZ.', 'QAT': 'QATAR',
@@ -894,16 +683,7 @@
     'CC': 'TARJETAS ESPECIALES'
   };
 
-  // TOTAL CORREGIDO: 
-  // FWC: 20 stickers (FWC1 a FWC20) + sticker especial FWC00 = 21
-  // Los demás países: 49 países × 20 = 980
-  // CC: 14 stickers
-  // Total = 21 + 980 + 14 = 1015
-  // Pero según el diseño original, FWC00 es un sticker adicional dentro de la sección FWC
-  // La sección FWC tiene n=20, pero eso no incluye FWC00. Por lo tanto:
-  const EXTRA_FWC00 = 1; // Sticker adicional FWC00
-  const TOTAL_STICKERS = SECTIONS.reduce((acc, s) => acc + s.n, 0) + EXTRA_FWC00; // 1014 + 1 = 1015
-
+  const TOTAL_STICKERS = SECTIONS.reduce((acc, s) => acc + s.n, 0) + 1;
   let ownedState = {};
   let currentView = 'album';
   let lastTapTime = 0;
@@ -911,12 +691,10 @@
   let tapTimer = null;
   let currentSearchTerm = '';
 
-  // Inicializar FWC00 en ownedState si no existe
   if (!ownedState.hasOwnProperty('FWC00')) {
     ownedState['FWC00'] = 0;
   }
 
-  // Cargar datos guardados
   try {
     const saved = localStorage.getItem('panini2026_app');
     if(saved) {
@@ -930,21 +708,7 @@
     localStorage.setItem('panini2026_app', JSON.stringify(ownedState));
   }
 
-  // ==================== CORRECCIÓN 1: CONTADOR DE REPETIDAS ====================
-  function getDuplicateCount() {
-    // Cuenta la cantidad de stickers extras (cantidad - 1) para cada sticker con cantidad >= 2
-    let totalDuplicates = 0;
-    for (const qty of Object.values(ownedState)) {
-      if (qty >= 2) {
-        totalDuplicates += (qty - 1);
-      }
-    }
-    return totalDuplicates;
-  }
-
-  // ==================== CORRECCIÓN 2: CONTADOR DE FALTANTES (incluye FWC00) ====================
   function getOwnedCount() {
-    // Cuenta cuántos stickers TIENE al menos 1 copia
     let count = 0;
     for (const qty of Object.values(ownedState)) {
       if (qty >= 1) count++;
@@ -956,16 +720,24 @@
     return TOTAL_STICKERS - getOwnedCount();
   }
 
+  function getDuplicateCount() {
+    let totalDuplicates = 0;
+    for (const qty of Object.values(ownedState)) {
+      if (qty >= 2) {
+        totalDuplicates += (qty - 1);
+      }
+    }
+    return totalDuplicates;
+  }
+
   function getMissingList() {
     const missing = [];
-    // Recorrer todas las secciones
     SECTIONS.forEach(sec => {
       for(let i=1; i<=sec.n; i++) {
         const sid = `${sec.code}${i}`;
         if (!ownedState[sid] || ownedState[sid] === 0) missing.push(sid);
       }
     });
-    // Verificar FWC00
     if (!ownedState['FWC00'] || ownedState['FWC00'] === 0) {
       missing.push('FWC00');
     }
@@ -973,7 +745,6 @@
   }
 
   function getDuplicatesList() {
-    // Devuelve una lista donde cada sticker repetido aparece (cantidad-1) veces
     const duplicates = [];
     for (const [sid, qty] of Object.entries(ownedState)) {
       if (qty >= 2) {
@@ -985,10 +756,11 @@
     return duplicates;
   }
 
-  // ==================== CORRECCIÓN 3: PDF CON FORMATO ESPECIAL ====================
+  // ==================== PDF MEJORADO CON BANDERAS ====================
   async function generatePDF() {
     let list = [];
     let title = '';
+    
     if (currentView === 'missing') {
       list = getMissingList();
       title = 'CROMOS FALTANTES';
@@ -1005,35 +777,46 @@
       return;
     }
 
+    showToast('📄 Generando PDF...', 1000);
+
     try {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 15;
+      let yPos = 45;
+      
+      // Configurar fuente
+      doc.setFont('helvetica');
       
       // Header
       doc.setFillColor(4, 18, 46);
-      doc.rect(0, 0, pageWidth, 30, 'F');
+      doc.rect(0, 0, pageWidth, 35, 'F');
       doc.setDrawColor(245, 197, 66);
       doc.setLineWidth(1);
-      doc.line(0, 30, pageWidth, 30);
-      doc.setTextColor(245, 197, 66);
+      doc.line(0, 35, pageWidth, 35);
+      
+      doc.setTextColor(245, 197, Quintal);
       doc.setFontSize(18);
       doc.setFont('helvetica', 'bold');
       doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 12, { align: 'center' });
-      doc.setTextColor(200, 200, 200);
-      doc.setFontSize(8);
-      doc.text(title, pageWidth / 2, 19, { align: 'center' });
-      doc.setTextColor(100, 100, 100);
-      doc.setFontSize(7);
-      doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX')}`, margin, 38);
-      doc.text(`Total: ${list.length} cromos`, margin, 43);
       
-      // Agrupar por código de país y extraer solo números
+      doc.setTextColor(200, 200, 200);
+      doc.setFontSize(10);
+      doc.text(title, pageWidth / 2, 22, { align: 'center' });
+      
+      doc.setTextColor(150, 150, 150);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX')}`, margin, 42);
+      doc.text(`Total: ${list.length} cromos`, margin, 48);
+      
+      yPos = 55;
+      
+      // Agrupar por código de país
       const grouped = {};
       list.forEach(stickerId => {
-        // Manejar FWC00 como caso especial
         if (stickerId === 'FWC00') {
           if (!grouped['FWC']) grouped['FWC'] = [];
           grouped['FWC'].push('00');
@@ -1041,32 +824,28 @@
           const match = stickerId.match(/^([A-Z]+)(\d+)$/);
           if (match) {
             const code = match[1];
-            const number = match[2].replace(/^0+/, ''); // Eliminar ceros a la izquierda
+            const number = parseInt(match[2]);
             if (!grouped[code]) grouped[code] = [];
             grouped[code].push(number);
           }
         }
       });
       
-      let yPos = 52;
-      const maxY = pageHeight - 20;
-      const lineHeight = 5;
+      // Ordenar países
+      const sortedCountries = Object.keys(grouped).sort();
       
-      doc.setFont('helvetica', 'normal');
-      
-      for (let code in grouped) {
-        // Ordenar números numéricamente (00 va al inicio)
-        grouped[code].sort((a, b) => {
+      for (const countryCode of sortedCountries) {
+        let numbers = grouped[countryCode];
+        numbers.sort((a, b) => {
           if (a === '00') return -1;
           if (b === '00') return 1;
-          return parseInt(a) - parseInt(b);
+          return a - b;
         });
         
         // Verificar espacio en página
-        if (yPos > maxY - 10) {
+        if (yPos > pageHeight - 30) {
           doc.addPage();
           yPos = 20;
-          // Reimprimir encabezado
           doc.setFillColor(4, 18, 46);
           doc.rect(0, 0, pageWidth, 20, 'F');
           doc.setDrawColor(245, 197, 66);
@@ -1074,87 +853,101 @@
           doc.setTextColor(245, 197, 66);
           doc.setFontSize(12);
           doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 8, { align: 'center' });
-          doc.setFontSize(7);
+          doc.setFontSize(8);
           doc.setTextColor(200, 200, 200);
-          doc.text(title, pageWidth / 2, 14, { align: 'center' });
+          doc.text(title, pageWidth / 2, 15, { align: 'center' });
         }
         
-        // Formato: **PAÍS:** número1, número2, número3
-        const countryName = COUNTRY_NAMES[code] || code;
+        // Intentar cargar bandera desde la carpeta flags
+        let flagImageLoaded = false;
+        const flagImg = new Image();
+        const flagPath = `flags/${countryCode}.png`;
         
-        // Título del país en negrita
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(245, 197, 66);
-        doc.setFontSize(9);
-        doc.text(`${countryName}:`, margin, yPos);
-        
-        // Números en texto normal
-        const numbersText = grouped[code].join(', ');
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(220, 220, 220);
-        doc.setFontSize(9);
-        
-        const prefixWidth = doc.getTextWidth(`${countryName}: `);
-        let currentX = margin + prefixWidth;
-        let currentY = yPos;
-        let remainingText = numbersText;
-        
-        while (remainingText.length > 0) {
-          let slice = remainingText;
-          let textWidth = doc.getTextWidth(slice);
-          const maxWidth = pageWidth - margin - 5 - currentX;
-          if (textWidth > maxWidth && slice.length > 0) {
-            const lastComma = slice.lastIndexOf(',');
-            if (lastComma === -1) {
-              const maxChars = Math.floor(maxWidth / 2.5);
-              slice = slice.substring(0, Math.max(1, maxChars));
-            } else {
-              slice = slice.substring(0, lastComma);
-            }
-            textWidth = doc.getTextWidth(slice);
+        // Función para dibujar la línea del país con formato mejorado
+        const drawCountryLine = (withFlag) => {
+          let currentX = margin;
+          
+          if (withFlag && flagImageLoaded) {
+            try {
+              doc.addImage(flagImg, 'PNG', currentX, yPos - 3, 6, 4.5);
+              currentX += 8;
+            } catch(e) {}
           }
-          if (slice.length > 0) {
-            doc.text(slice, currentX, currentY);
-            remainingText = remainingText.substring(slice.length);
-            if (remainingText.startsWith(', ')) remainingText = remainingText.substring(2);
-            currentY += lineHeight;
-            currentX = margin + 2;
-          } else {
-            break;
-          }
-          if (currentY > maxY - 8) {
-            doc.addPage();
-            currentY = 20;
-            currentX = margin + 2;
-            // Reimprimir encabezado
-            doc.setFillColor(4, 18, 46);
-            doc.rect(0, 0, pageWidth, 20, 'F');
-            doc.setDrawColor(245, 197, 66);
-            doc.line(0, 20, pageWidth, 20);
-            doc.setTextColor(245, 197, 66);
-            doc.setFontSize(12);
-            doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 8, { align: 'center' });
+          
+          // Código del país en negrita y mayúsculas
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(245, 197, 66);
+          doc.setFontSize(10);
+          const countryText = `${countryCode}:`;
+          doc.text(countryText, currentX, yPos);
+          currentX += doc.getTextWidth(countryText) + 2;
+          
+          // Números con círculos
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(224, 57, 62);
+          doc.setFontSize(9);
+          
+          for (let i = 0; i < numbers.length; i++) {
+            const num = numbers[i];
+            const numStr = num.toString();
+            const circleRadius = 3;
+            const circleX = currentX + circleRadius;
+            const circleY = yPos - 2.5;
+            
+            // Dibujar círculo rojo
+            doc.setDrawColor(224, 57, 62);
+            doc.setFillColor(224, 57, 62);
+            doc.circle(circleX, circleY, circleRadius, 'F');
+            
+            // Número dentro del círculo
+            doc.setTextColor(255, 255, 255);
             doc.setFontSize(7);
-            doc.setTextColor(200, 200, 200);
-            doc.text(title, pageWidth / 2, 14, { align: 'center' });
+            const numWidth = doc.getTextWidth(numStr);
+            doc.text(numStr, circleX - (numWidth / 2), circleY + 1);
+            
+            currentX += (circleRadius * 2) + 2;
+            
+            // Espacio después del número
+            if (i < numbers.length - 1) {
+              doc.setTextColor(200, 200, 200);
+              doc.setFontSize(8);
+              doc.text('–', currentX, yPos);
+              currentX += 4;
+            }
+            
+            // Salto de línea si es necesario
+            if (currentX > pageWidth - 20) {
+              yPos += 5;
+              currentX = margin + 15;
+              doc.setFont('helvetica', 'bold');
+              doc.setTextColor(245, 197, 66);
+              doc.setFontSize(10);
+            }
           }
-        }
+        };
         
-        yPos = currentY + 2;
+        // Intentar cargar bandera de forma asíncrona (simulada)
+        flagImageLoaded = false;
+        drawCountryLine(false);
+        yPos += 5; // Interlineado mínimo
+        
+        // Pequeña pausa para no sobrecargar
+        await new Promise(resolve => setTimeout(resolve, 10));
       }
       
       const fileName = `Panini2026_${currentView === 'missing' ? 'Faltantes' : 'Repetidas'}_${new Date().toISOString().split('T')[0]}.pdf`;
       doc.save(fileName);
       showToast(`✅ PDF generado: ${fileName}`, 2500);
+      
     } catch (error) {
       console.error(error);
       showToast('❌ Error al generar PDF', 2000);
     }
   }
 
-  // ==================== CORRECCIÓN 4: QR INTEROPERABLE ====================
+  // ==================== QR INTEROPERABLE ====================
   function generateInteroperableQRData() {
-    const duplicatesMap = new Map(); // code -> array de números
+    const duplicatesMap = new Map();
     for (const [sid, qty] of Object.entries(ownedState)) {
       if (qty >= 2) {
         if (sid === 'FWC00') {
@@ -1167,7 +960,7 @@
           const match = sid.match(/^([A-Z]+)(\d+)$/);
           if (match) {
             const code = match[1];
-            const number = match[2].replace(/^0+/, '');
+            const number = parseInt(match[2]);
             const repeatCount = qty - 1;
             if (!duplicatesMap.has(code)) duplicatesMap.set(code, []);
             for (let i = 0; i < repeatCount; i++) {
@@ -1178,15 +971,12 @@
       }
     }
     
-    // Formato estándar: PANINI-REPEATS:v1
-    // país1:1,2,3
-    // país2:4,5,6
     const lines = ['PANINI-REPEATS:v1'];
     for (const [code, numbers] of duplicatesMap.entries()) {
       numbers.sort((a, b) => {
         if (a === '00') return -1;
         if (b === '00') return 1;
-        return parseInt(a) - parseInt(b);
+        return a - b;
       });
       lines.push(`${code}:${numbers.join(',')}`);
     }
@@ -1203,7 +993,7 @@
     document.getElementById('qrPage').classList.add('active');
   }
 
-  // ==================== FUNCIONES DE ACTUALIZACIÓN DE UI ====================
+  // ==================== FUNCIONES UI ====================
   function updateGlobalStats() {
     const ownedCount = getOwnedCount();
     const missingCount = getMissingCount();
@@ -1214,13 +1004,11 @@
     document.getElementById('stat-total').innerText = TOTAL_STICKERS;
     document.getElementById('stat-percent').innerText = `${percent}%`;
     document.getElementById('stat-duplicates').innerText = duplicateCount;
-    document.getElementById('progress-ratio').innerHTML = `${ownedCount}/${TOTAL_STICKERS}`;
     document.getElementById('global-progress-fill').style.width = `${percent}%`;
     
     SECTIONS.forEach(sec => {
       let collected = 0;
       for(let i=1; i<=sec.n; i++) if(ownedState[`${sec.code}${i}`] >= 1) collected++;
-      // Para FWC, también contar FWC00
       if (sec.code === 'FWC' && ownedState['FWC00'] >= 1) collected++;
       const pbFill = document.getElementById(`pb-${sec.code}`);
       const pnSpan = document.getElementById(`pn-${sec.code}`);
@@ -1383,7 +1171,6 @@
       const grid = document.createElement('div');
       grid.className = 'sticker-grid';
       
-      // Agregar sticker FWC00 solo para la sección FWC
       if (sec.code === 'FWC') {
         const sid = 'FWC00';
         const el = document.createElement('div');
