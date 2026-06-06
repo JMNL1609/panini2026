@@ -756,8 +756,12 @@
     return duplicates;
   }
 
-  // ==================== PDF MEJORADO CON BANDERAS ====================
-  async function generatePDF() {
+  // ==================== FUNCIÓN PDF MODIFICADA ====================
+  // Cambios realizados:
+  // 1. Los códigos de país en mayúsculas y negrita
+  // 2. Solo números, sin letras
+  // 3. Interlineado mínimo entre países
+  function generatePDF() {
     let list = [];
     let title = '';
     
@@ -787,9 +791,6 @@
       const margin = 15;
       let yPos = 45;
       
-      // Configurar fuente
-      doc.setFont('helvetica');
-      
       // Header
       doc.setFillColor(4, 18, 46);
       doc.rect(0, 0, pageWidth, 35, 'F');
@@ -797,7 +798,7 @@
       doc.setLineWidth(1);
       doc.line(0, 35, pageWidth, 35);
       
-      doc.setTextColor(245, 197, Quintal);
+      doc.setTextColor(245, 197, 66);
       doc.setFontSize(18);
       doc.setFont('helvetica', 'bold');
       doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 12, { align: 'center' });
@@ -843,7 +844,7 @@
         });
         
         // Verificar espacio en página
-        if (yPos > pageHeight - 30) {
+        if (yPos > pageHeight - 20) {
           doc.addPage();
           yPos = 20;
           doc.setFillColor(4, 18, 46);
@@ -858,81 +859,46 @@
           doc.text(title, pageWidth / 2, 15, { align: 'center' });
         }
         
-        // Intentar cargar bandera desde la carpeta flags
-        let flagImageLoaded = false;
-        const flagImg = new Image();
-        const flagPath = `flags/${countryCode}.png`;
+        let currentX = margin;
         
-        // Función para dibujar la línea del país con formato mejorado
-        const drawCountryLine = (withFlag) => {
-          let currentX = margin;
+        // Código del país en mayúsculas y negrita
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(245, 197, 66);
+        doc.setFontSize(10);
+        const countryText = `${countryCode}:`;
+        doc.text(countryText, currentX, yPos);
+        currentX += doc.getTextWidth(countryText) + 2;
+        
+        // Números en orden, solo el número (sin letras), en negrita
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(224, 57, 62);
+        doc.setFontSize(9);
+        
+        for (let i = 0; i < numbers.length; i++) {
+          const num = numbers[i];
+          const numStr = num.toString();
           
-          if (withFlag && flagImageLoaded) {
-            try {
-              doc.addImage(flagImg, 'PNG', currentX, yPos - 3, 6, 4.5);
-              currentX += 8;
-            } catch(e) {}
+          // Número en negrita
+          doc.text(numStr, currentX, yPos);
+          currentX += doc.getTextWidth(numStr) + 2;
+          
+          // Separador "–" entre números
+          if (i < numbers.length - 1) {
+            doc.setTextColor(200, 200, 200);
+            doc.text('–', currentX, yPos);
+            currentX += 4;
+            doc.setTextColor(224, 57, 62);
           }
           
-          // Código del país en negrita y mayúsculas
-          doc.setFont('helvetica', 'bold');
-          doc.setTextColor(245, 197, 66);
-          doc.setFontSize(10);
-          const countryText = `${countryCode}:`;
-          doc.text(countryText, currentX, yPos);
-          currentX += doc.getTextWidth(countryText) + 2;
-          
-          // Números con círculos
-          doc.setFont('helvetica', 'bold');
-          doc.setTextColor(224, 57, 62);
-          doc.setFontSize(9);
-          
-          for (let i = 0; i < numbers.length; i++) {
-            const num = numbers[i];
-            const numStr = num.toString();
-            const circleRadius = 3;
-            const circleX = currentX + circleRadius;
-            const circleY = yPos - 2.5;
-            
-            // Dibujar círculo rojo
-            doc.setDrawColor(224, 57, 62);
-            doc.setFillColor(224, 57, 62);
-            doc.circle(circleX, circleY, circleRadius, 'F');
-            
-            // Número dentro del círculo
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(7);
-            const numWidth = doc.getTextWidth(numStr);
-            doc.text(numStr, circleX - (numWidth / 2), circleY + 1);
-            
-            currentX += (circleRadius * 2) + 2;
-            
-            // Espacio después del número
-            if (i < numbers.length - 1) {
-              doc.setTextColor(200, 200, 200);
-              doc.setFontSize(8);
-              doc.text('–', currentX, yPos);
-              currentX += 4;
-            }
-            
-            // Salto de línea si es necesario
-            if (currentX > pageWidth - 20) {
-              yPos += 5;
-              currentX = margin + 15;
-              doc.setFont('helvetica', 'bold');
-              doc.setTextColor(245, 197, 66);
-              doc.setFontSize(10);
-            }
+          // Salto de línea si es necesario
+          if (currentX > pageWidth - margin) {
+            yPos += 4;
+            currentX = margin + doc.getTextWidth(`${countryCode}:`) + 2;
           }
-        };
+        }
         
-        // Intentar cargar bandera de forma asíncrona (simulada)
-        flagImageLoaded = false;
-        drawCountryLine(false);
-        yPos += 5; // Interlineado mínimo
-        
-        // Pequeña pausa para no sobrecargar
-        await new Promise(resolve => setTimeout(resolve, 10));
+        // Interlineado mínimo entre países (solo 3mm en lugar de 5mm)
+        yPos += 3;
       }
       
       const fileName = `Panini2026_${currentView === 'missing' ? 'Faltantes' : 'Repetidas'}_${new Date().toISOString().split('T')[0]}.pdf`;
