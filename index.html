@@ -770,37 +770,42 @@
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 15;
-      let yPos = 50;
       
-      // Header
-      doc.setFillColor(4, 18, 46);
-      doc.rect(0, 0, pageWidth, 42, 'F');
-      doc.setDrawColor(245, 197, 66);
-      doc.setLineWidth(1);
-      doc.line(0, 42, pageWidth, 42);
+      // CONSTANTE: Posición Y donde comienza el contenido en la primera página
+      const CONTENT_START_Y = 55;
+      let yPos = CONTENT_START_Y;
       
-      doc.setTextColor(245, 197, 66);
-      doc.setFontSize(18);
-      doc.setFont('helvetica', 'bold');
-      doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 12, { align: 'center' });
+      // Función para dibujar el encabezado en cualquier página
+      function drawHeader() {
+        doc.setFillColor(4, 18, 46);
+        doc.rect(0, 0, pageWidth, 42, 'F');
+        doc.setDrawColor(245, 197, 66);
+        doc.setLineWidth(1);
+        doc.line(0, 42, pageWidth, 42);
+        
+        doc.setTextColor(245, 197, 66);
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 12, { align: 'center' });
+        
+        doc.setTextColor(200, 200, 200);
+        doc.setFontSize(10);
+        doc.text(title, pageWidth / 2, 22, { align: 'center' });
+        
+        doc.setTextColor(245, 197, 66);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'italic');
+        doc.text('SEBASTIAN NAVARRO', pageWidth / 2, 30, { align: 'center' });
+        
+        doc.setTextColor(150, 150, 150);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX')}`, margin, 38);
+        doc.text(`Total: ${list.length} cromos`, margin, 44);
+      }
       
-      doc.setTextColor(200, 200, 200);
-      doc.setFontSize(10);
-      doc.text(title, pageWidth / 2, 22, { align: 'center' });
-      
-      // Nombre del propietario centrado
-      doc.setTextColor(245, 197, 66);
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'italic');
-      doc.text('SEBASTIAN NAVARRO', pageWidth / 2, 30, { align: 'center' });
-      
-      doc.setTextColor(150, 150, 150);
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX')}`, margin, 38);
-      doc.text(`Total: ${list.length} cromos`, margin, 44);
-      
-      yPos = 55;
+      // Dibujar encabezado de la primera página
+      drawHeader();
       
       // Agrupar por código de país
       const grouped = {};
@@ -827,27 +832,20 @@
         }
       }
       
-      // Calcular el ancho máximo de la parte "bandera + código:" para alinear los ":"
-      let maxPrefixWidth = 0;
+      // Calcular el ancho MÁXIMO del texto "XXXX:" (sin contar la bandera)
+      let maxCodeWidth = 0;
       for (const countryCode of sortedCountries) {
-        const section = SECTIONS.find(s => s.code === countryCode);
-        const useEmoji = section && section.useEmoji;
-        
-        // Ancho de la bandera (5mm para PNG, 5mm para emoji)
-        let prefixWidth = 5; // espacio para bandera
-        
-        // Ancho del texto del código con ":"
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(9);
         const textWidth = doc.getTextWidth(`${countryCode}:`);
-        prefixWidth += textWidth;
-        
-        if (prefixWidth > maxPrefixWidth) {
-          maxPrefixWidth = prefixWidth;
+        if (textWidth > maxCodeWidth) {
+          maxCodeWidth = textWidth;
         }
       }
-      // Añadir un pequeño margen extra para alineación perfecta
-      const columnWidth = maxPrefixWidth + 2;
+      
+      // La columna para el código tendrá ancho fijo = ancho máximo del código + espacio para la bandera (6mm)
+      const FLAG_WIDTH = 6; // mm para bandera (incluyendo espacio)
+      const CODE_COLUMN_WIDTH = maxCodeWidth + FLAG_WIDTH;
       
       for (const countryCode of sortedCountries) {
         let numbers = grouped[countryCode];
@@ -858,38 +856,24 @@
         });
         
         // Verificar espacio en página
-        if (yPos > pageHeight - 20) {
+        if (yPos > pageHeight - 15) {
           doc.addPage();
-          yPos = 20;
-          doc.setFillColor(4, 18, 46);
-          doc.rect(0, 0, pageWidth, 20, 'F');
-          doc.setDrawColor(245, 197, 66);
-          doc.line(0, 20, pageWidth, 20);
-          doc.setTextColor(245, 197, 66);
-          doc.setFontSize(12);
-          doc.text('FIFA WORLD CUP 2026', pageWidth / 2, 8, { align: 'center' });
-          doc.setFontSize(8);
-          doc.setTextColor(200, 200, 200);
-          doc.text(title, pageWidth / 2, 15, { align: 'center' });
+          yPos = CONTENT_START_Y; // MISMA distancia que la primera página
+          drawHeader();
         }
         
-        // Posición inicial después del margen
-        let currentX = margin;
-        const flagSize = 4.5;
+        // Posición X después del margen        let currentX = margin;
         
         // Verificar si el país tiene bandera PNG (FWC y CC usan emoji)
         const section = SECTIONS.find(s => s.code === countryCode);
         const useEmoji = section && section.useEmoji;
         
-        // Guardar la posición X del inicio de la línea
-        const lineStartX = currentX;
-        
         if (useEmoji) {
-          // Usar emoji para FWC y CC
+          // Usar emoji para FWC 🏆 y CC ⭐
           doc.setFont('helvetica', 'normal');
-          doc.setFontSize(8);
+          doc.setFontSize(11);
           doc.text(section.flag, currentX, yPos);
-          currentX += 5;
+          currentX += FLAG_WIDTH;
         } else {
           // Cargar bandera PNG desde la carpeta flags
           try {
@@ -905,31 +889,30 @@
             
             if (img.complete && img.naturalWidth > 0) {
               try {
-                doc.addImage(img, 'PNG', currentX, yPos - 3, flagSize, flagSize);
-                currentX += flagSize + 1;
-              } catch(e) {
-                currentX += flagSize + 1;
-              }
-            } else {
-              currentX += flagSize + 1;
+                doc.addImage(img, 'PNG', currentX, yPos - 3.5, 5, 4);
+              } catch(e) {}
             }
+            currentX += FLAG_WIDTH;
           } catch(e) {
-            currentX += flagSize + 1;
+            currentX += FLAG_WIDTH;
           }
         }
+        
+        // Guardar la posición X después de la bandera (inicio del código)
+        const codeStartX = currentX;
         
         // Código del país en mayúsculas, color NEGRO y negrita, seguido de ":"
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(9);
         const countryText = `${countryCode}:`;
-        doc.text(countryText, currentX, yPos);
+        doc.text(countryText, codeStartX, yPos);
         
-        // Calcular la posición donde deben comenzar los números (columna fija alineada)
-        // Usamos la columna calculada basada en el ancho máximo del prefijo
-        const numbersStartX = lineStartX + columnWidth;
+        // Calcular la posición donde deben comenzar los números
+        // Se usa margin + CODE_COLUMN_WIDTH para que TODOS los ":" queden perfectamente alineados
+        const numbersStartX = margin + CODE_COLUMN_WIDTH;
         
-        // Números SIN círculos, solo los números en negrita color negro
+        // Números en negrita color negro
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(8);
@@ -940,11 +923,9 @@
           const num = numbers[i];
           const numStr = num.toString();
           
-          // Número en negrita sin círculo
           doc.text(numStr, currentNumbersX, yPos);
           currentNumbersX += doc.getTextWidth(numStr) + 1.5;
           
-          // Separador "–" entre números
           if (i < numbers.length - 1) {
             doc.setTextColor(100, 100, 100);
             doc.setFontSize(7.5);
@@ -954,18 +935,14 @@
             doc.setFontSize(8);
           }
           
-          // Salto de línea si es necesario (muy raro que ocurra ahora con la alineación)
+          // Salto de línea si es necesario
           if (currentNumbersX > pageWidth - margin) {
             yPos += 4;
             currentNumbersX = numbersStartX;
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(0, 0, 0);
-            doc.setFontSize(8);
           }
         }
         
-        // Más interlineado entre países (6mm para que no se vean amontonadas)
-        yPos += 6;
+        yPos += 5;
       }
       
       const fileName = `Panini2026_${currentView === 'missing' ? 'Faltantes' : 'Repetidas'}_${new Date().toISOString().split('T')[0]}.pdf`;
@@ -1026,7 +1003,7 @@
     document.getElementById('qrPage').classList.add('active');
   }
 
-  // ==================== FUNCIONES UI (sin cambios) ====================
+  // ==================== FUNCIONES UI ====================
   function updateGlobalStats() {
     const ownedCount = getOwnedCount();
     const missingCount = getMissingCount();
