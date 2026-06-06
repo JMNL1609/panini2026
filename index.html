@@ -771,11 +771,11 @@
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 15;
       
-      // CONSTANTE: Posición Y donde comienza el contenido en la primera página
+      // CONSTANTE: Posición Y donde comienza el contenido
       const CONTENT_START_Y = 55;
       let yPos = CONTENT_START_Y;
       
-      // Función para dibujar el encabezado en cualquier página
+      // Función para dibujar el encabezado
       function drawHeader() {
         doc.setFillColor(4, 18, 46);
         doc.rect(0, 0, pageWidth, 42, 'F');
@@ -804,7 +804,7 @@
         doc.text(`Total: ${list.length} cromos`, margin, 44);
       }
       
-      // Dibujar encabezado de la primera página
+      // Dibujar encabezado primera página
       drawHeader();
       
       // Agrupar por código de país
@@ -824,7 +824,7 @@
         }
       });
       
-      // Ordenar países según el orden de SECTIONS (mismo que en el Álbum)
+      // Ordenar países según SECTIONS
       const sortedCountries = [];
       for (const section of SECTIONS) {
         if (grouped[section.code]) {
@@ -832,7 +832,7 @@
         }
       }
       
-      // Calcular el ancho MÁXIMO del texto "XXXX:" (sin contar la bandera)
+      // Calcular ancho máximo del texto "XXXX:"
       let maxCodeWidth = 0;
       for (const countryCode of sortedCountries) {
         doc.setFont('helvetica', 'bold');
@@ -843,8 +843,7 @@
         }
       }
       
-      // La columna para el código tendrá ancho fijo = ancho máximo del código + espacio para la bandera (6mm)
-      const FLAG_WIDTH = 6; // mm para bandera (incluyendo espacio)
+      const FLAG_WIDTH = 6;
       const CODE_COLUMN_WIDTH = maxCodeWidth + FLAG_WIDTH;
       
       for (const countryCode of sortedCountries) {
@@ -858,24 +857,21 @@
         // Verificar espacio en página
         if (yPos > pageHeight - 15) {
           doc.addPage();
-          yPos = CONTENT_START_Y; // MISMA distancia que la primera página
+          yPos = CONTENT_START_Y;
           drawHeader();
         }
         
-        // Posición X después del margen        let currentX = margin;
+        let currentX = margin;
         
-        // Verificar si el país tiene bandera PNG (FWC y CC usan emoji)
         const section = SECTIONS.find(s => s.code === countryCode);
         const useEmoji = section && section.useEmoji;
         
         if (useEmoji) {
-          // Usar emoji para FWC 🏆 y CC ⭐
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(11);
           doc.text(section.flag, currentX, yPos);
           currentX += FLAG_WIDTH;
         } else {
-          // Cargar bandera PNG desde la carpeta flags
           try {
             const flagUrl = `flags/${countryCode}.png`;
             const img = new Image();
@@ -898,21 +894,15 @@
           }
         }
         
-        // Guardar la posición X después de la bandera (inicio del código)
-        const codeStartX = currentX;
-        
-        // Código del país en mayúsculas, color NEGRO y negrita, seguido de ":"
+        // Código del país en negrita
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(9);
-        const countryText = `${countryCode}:`;
-        doc.text(countryText, codeStartX, yPos);
+        doc.text(`${countryCode}:`, currentX, yPos);
         
-        // Calcular la posición donde deben comenzar los números
-        // Se usa margin + CODE_COLUMN_WIDTH para que TODOS los ":" queden perfectamente alineados
+        // Posición alineada para los números (TODOS los ":" en la misma columna)
         const numbersStartX = margin + CODE_COLUMN_WIDTH;
         
-        // Números en negrita color negro
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(8);
@@ -920,9 +910,7 @@
         let currentNumbersX = numbersStartX;
         
         for (let i = 0; i < numbers.length; i++) {
-          const num = numbers[i];
-          const numStr = num.toString();
-          
+          const numStr = numbers[i].toString();
           doc.text(numStr, currentNumbersX, yPos);
           currentNumbersX += doc.getTextWidth(numStr) + 1.5;
           
@@ -935,7 +923,6 @@
             doc.setFontSize(8);
           }
           
-          // Salto de línea si es necesario
           if (currentNumbersX > pageWidth - margin) {
             yPos += 4;
             currentNumbersX = numbersStartX;
@@ -951,7 +938,7 @@
       
     } catch (error) {
       console.error(error);
-      showToast('❌ Error al generar PDF', 2000);
+      showToast('❌ Error al generar PDF: ' + error.message, 3000);
     }
   }
 
