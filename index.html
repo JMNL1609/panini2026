@@ -615,7 +615,6 @@
 
 <script>
   // ==================== CONFIGURACIÓN ====================
-  // FWC tiene 19 cromos (00 al 19) + los 20 equipos, total 1014
   const SECTIONS = [
     { code:'FWC', name:'FIFA World Cup', flag:'🏆', n:19, useEmoji: true },
     { code:'MEX', name:'México', flag:'🇲🇽', n:20, useEmoji: false },
@@ -669,9 +668,6 @@
     { code:'CC',  name:'Tarjetas Especiales', flag:'⭐', n:14, useEmoji: true },
   ];
 
-  // Total: suma de n de todas las secciones (FWC:19 + 46 equipos*20 + CC:14 = 953)
-  // + FWC00 (1 sticker adicional) = 954? Revisar: FWC tiene 00 + 19 = 20 stickers en realidad
-  // Total real: 1 (FWC00) + 19 (FWC01-19) + 46*20 + 14 = 1+19+920+14 = 954
   const TOTAL_STICKERS = SECTIONS.reduce((acc, s) => acc + s.n, 0) + 1;
   let ownedState = {};
   let currentView = 'album';
@@ -861,15 +857,18 @@
           drawHeader();
         }
         
-        // Dibujar bandera o emoji en posición fija
+        // 🔧 FORZAR EMOJIS PARA FWC y CC
         const flagX = margin;
         const section = SECTIONS.find(s => s.code === countryCode);
         
+        // Verificar si debe usar emoji (FWC o CC tienen useEmoji: true)
         if (section && section.useEmoji) {
+          // Usar el emoji directamente de la configuración
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(12);
           doc.text(section.flag, flagX, yPos);
         } else {
+          // Intentar cargar bandera PNG (solo para países que no usan emoji)
           try {
             const flagUrl = `flags/${countryCode}.png`;
             const img = new Image();
@@ -882,17 +881,19 @@
             if (img.complete && img.naturalWidth > 0) {
               doc.addImage(img, 'PNG', flagX, yPos - 3.5, 5.5, 4.5);
             }
-          } catch(e) {}
+          } catch(e) {
+            // Si falla la carga, no mostrar nada (no hay emoji de respaldo)
+          }
         }
         
-        // Código del país con ":" alineado (todos comienzan en la misma posición)
+        // Código del país con ":" alineado
         const codeX = margin + FLAG_WIDTH;
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(9);
         doc.text(`${countryCode}:`, codeX, yPos);
         
-        // Números alineados (todos comienzan en COLUMN_WIDTH)
+        // Números alineados con espaciado corregido
         const numbersStartX = margin + COLUMN_WIDTH + 4.0;
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
@@ -905,9 +906,9 @@
           currentX += doc.getTextWidth(numStr);
   
           if (i < numbers.length - 1) {
-            const espacioGuion = 2.5; // Espacio para el guión
+            const espacioGuion = 2.5; // Espacio fijo antes y después del guión
   
-            currentX += espacioGuion; // Espacio ANTES del guión (2.5)
+            currentX += espacioGuion; // Espacio ANTES del guión
   
             doc.setTextColor(100, 100, 100);
             doc.setFontSize(7.5);
@@ -915,7 +916,7 @@
             doc.setTextColor(0, 0, 0);
             doc.setFontSize(8);
   
-            currentX += espacioGuion; // Espacio DESPUÉS del guión (2.5)
+            currentX += espacioGuion; // Espacio DESPUÉS del guión
           }
   
           if (currentX > pageWidth - margin) {
