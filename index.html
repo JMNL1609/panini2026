@@ -616,7 +616,7 @@
 <script>
   // ==================== CONFIGURACIÓN ====================
   const SECTIONS = [
-    { code:'FWC', name:'FIFA World Cup', flag:'🏆', n:19, useEmoji: true },
+    { code:'FWC', name:'FIFA World Cup', flag:'🏆', n:19, useEmoji: false },
     { code:'MEX', name:'México', flag:'🇲🇽', n:20, useEmoji: false },
     { code:'RSA', name:'Sudáfrica', flag:'🇿🇦', n:20, useEmoji: false },
     { code:'KOR', name:'Corea del Sur', flag:'🇰🇷', n:20, useEmoji: false },
@@ -665,7 +665,7 @@
     { code:'CRO', name:'Croacia', flag:'🇭🇷', n:20, useEmoji: false },
     { code:'GHA', name:'Ghana', flag:'🇬🇭', n:20, useEmoji: false },
     { code:'PAN', name:'Panamá', flag:'🇵🇦', n:20, useEmoji: false },
-    { code:'CC',  name:'Tarjetas Especiales', flag:'⭐', n:14, useEmoji: true },
+    { code:'CC',  name:'Tarjetas Especiales', flag:'⭐', n:14, useEmoji: false },
   ];
 
   const TOTAL_STICKERS = SECTIONS.reduce((acc, s) => acc + s.n, 0) + 1;
@@ -741,7 +741,7 @@
     return duplicates;
   }
 
-  // ==================== FUNCIÓN PDF CORREGIDA ====================
+  // ==================== FUNCIÓN PDF ====================
   async function generatePDF() {
     let list = [];
     let title = '';
@@ -857,18 +857,14 @@
           drawHeader();
         }
         
-        // 🔧 FORZAR EMOJIS PARA FWC y CC
         const flagX = margin;
         const section = SECTIONS.find(s => s.code === countryCode);
         
-        // Verificar si debe usar emoji (FWC o CC tienen useEmoji: true)
         if (section && section.useEmoji) {
-          // Usar el emoji directamente de la configuración
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(12);
           doc.text(section.flag, flagX, yPos);
         } else {
-          // Intentar cargar bandera PNG (solo para países que no usan emoji)
           try {
             const flagUrl = `flags/${countryCode}.png`;
             const img = new Image();
@@ -881,19 +877,15 @@
             if (img.complete && img.naturalWidth > 0) {
               doc.addImage(img, 'PNG', flagX, yPos - 3.5, 5.5, 4.5);
             }
-          } catch(e) {
-            // Si falla la carga, no mostrar nada (no hay emoji de respaldo)
-          }
+          } catch(e) {}
         }
         
-        // Código del país con ":" alineado
         const codeX = margin + FLAG_WIDTH;
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(9);
         doc.text(`${countryCode}:`, codeX, yPos);
         
-        // Números alineados con espaciado corregido
         const numbersStartX = margin + COLUMN_WIDTH + 4.0;
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
@@ -906,17 +898,14 @@
           currentX += doc.getTextWidth(numStr);
   
           if (i < numbers.length - 1) {
-            const espacioGuion = 2.5; // Espacio fijo antes y después del guión
-  
-            currentX += espacioGuion; // Espacio ANTES del guión
-  
+            const espacioGuion = 2.5;
+            currentX += espacioGuion;
             doc.setTextColor(100, 100, 100);
             doc.setFontSize(7.5);
             doc.text('–', currentX, yPos);
             doc.setTextColor(0, 0, 0);
             doc.setFontSize(8);
-  
-            currentX += espacioGuion; // Espacio DESPUÉS del guión
+            currentX += espacioGuion;
           }
   
           if (currentX > pageWidth - margin) {
