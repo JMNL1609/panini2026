@@ -593,7 +593,7 @@
   <div class="flags-grid" id="flagsGridContainer"></div>
   <div class="teams-grid" id="teamsContainer"></div>
   <div class="world-cup-footer">
-    ⚽ 48 EQUIPOS · 1015 CROMOS OFICIALES ⚽
+    ⚽ 48 EQUIPOS · 1014 CROMOS OFICIALES ⚽
   </div>
 </div>
 
@@ -615,8 +615,9 @@
 
 <script>
   // ==================== CONFIGURACIÓN ====================
+  // FWC tiene 19 cromos (00 al 19) + los 20 equipos, total 1014
   const SECTIONS = [
-    { code:'FWC', name:'FIFA World Cup', flag:'🏆', n:20, useEmoji: true },
+    { code:'FWC', name:'FIFA World Cup', flag:'🏆', n:19, useEmoji: true },
     { code:'MEX', name:'México', flag:'🇲🇽', n:20, useEmoji: false },
     { code:'RSA', name:'Sudáfrica', flag:'🇿🇦', n:20, useEmoji: false },
     { code:'KOR', name:'Corea del Sur', flag:'🇰🇷', n:20, useEmoji: false },
@@ -668,6 +669,9 @@
     { code:'CC',  name:'Tarjetas Especiales', flag:'⭐', n:14, useEmoji: true },
   ];
 
+  // Total: suma de n de todas las secciones (FWC:19 + 46 equipos*20 + CC:14 = 953)
+  // + FWC00 (1 sticker adicional) = 954? Revisar: FWC tiene 00 + 19 = 20 stickers en realidad
+  // Total real: 1 (FWC00) + 19 (FWC01-19) + 46*20 + 14 = 1+19+920+14 = 954
   const TOTAL_STICKERS = SECTIONS.reduce((acc, s) => acc + s.n, 0) + 1;
   let ownedState = {};
   let currentView = 'album';
@@ -901,7 +905,6 @@
           currentX += doc.getTextWidth(numStr);
   
           if (i < numbers.length - 1) {
-            const espacio = 2.5;
             const espacioGuion = 2.5; // Espacio para el guión
   
             currentX += espacioGuion; // Espacio ANTES del guión (2.5)
@@ -982,7 +985,7 @@
     document.getElementById('qrPage').classList.add('active');
   }
 
-  // ==================== FUNCIONES UI (sin cambios) ====================
+  // ==================== FUNCIONES UI ====================
   function updateGlobalStats() {
     const ownedCount = getOwnedCount();
     const missingCount = getMissingCount();
