@@ -901,18 +901,18 @@
           currentX += doc.getTextWidth(numStr);
   
           if (i < numbers.length - 1) {
-            const espacio = 2.5; // Espacio total entre números
-            const medioEspacio = espacio / 2.5; // 2.5 para cada lado
-    
-            currentX += medioEspacio; // Espacio ANTES del guión
-    
+            const espacio = 2.5;
+            const espacioGuion = 2.5; // Espacio para el guión
+  
+            currentX += espacioGuion; // Espacio ANTES del guión (2.5)
+  
             doc.setTextColor(100, 100, 100);
             doc.setFontSize(7.5);
             doc.text('–', currentX, yPos);
             doc.setTextColor(0, 0, 0);
             doc.setFontSize(8);
-    
-            currentX += medioEspacio; // Espacio DESPUÉS del guión
+  
+            currentX += espacioGuion; // Espacio DESPUÉS del guión (2.5)
           }
   
           if (currentX > pageWidth - margin) {
